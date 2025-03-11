@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Star, Clock, MapPin, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { RestaurantFilters } from './RestaurantFilters';
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -119,32 +119,11 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
 
 const FeaturedRestaurants = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCuisine, setSelectedCuisine] = useState('All');
-  const [minRating, setMinRating] = useState(0);
-
-  const filteredRestaurants = useMemo(() => {
-    return restaurants.filter((restaurant) => {
-      const matchesSearch = restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesCuisine = selectedCuisine === 'All' || 
-                            restaurant.cuisine.includes(selectedCuisine);
-      
-      const matchesRating = restaurant.rating >= minRating;
-
-      return matchesSearch && matchesCuisine && matchesRating;
-    });
-  }, [searchQuery, selectedCuisine, minRating]);
-
-  const totalPages = Math.ceil(filteredRestaurants.length / ITEMS_PER_PAGE);
+  
+  const totalPages = Math.ceil(restaurants.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentRestaurants = filteredRestaurants.slice(startIndex, endIndex);
-
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCuisine, minRating]);
+  const currentRestaurants = restaurants.slice(startIndex, endIndex);
 
   return (
     <section id="restaurants" className="section-padding">
@@ -173,55 +152,40 @@ const FeaturedRestaurants = () => {
           </Button>
         </div>
         
-        <RestaurantFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedCuisine={selectedCuisine}
-          setSelectedCuisine={setSelectedCuisine}
-          minRating={minRating}
-          setMinRating={setMinRating}
-        />
-        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           {currentRestaurants.map((restaurant, index) => (
             <RestaurantCard key={index} restaurant={restaurant} />
           ))}
         </div>
 
-        {filteredRestaurants.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            No restaurants found matching your criteria.
-          </p>
-        ) : (
-          <Pagination className="mt-8">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  className={cn(currentPage === 1 && "pointer-events-none opacity-50")}
-                />
+        <Pagination className="mt-8">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                className={cn(currentPage === 1 && "pointer-events-none opacity-50")}
+              />
+            </PaginationItem>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  onClick={() => setCurrentPage(page)}
+                  isActive={currentPage === page}
+                >
+                  {page}
+                </PaginationLink>
               </PaginationItem>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(page)}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+            ))}
 
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  className={cn(currentPage === totalPages && "pointer-events-none opacity-50")}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                className={cn(currentPage === totalPages && "pointer-events-none opacity-50")}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </section>
   );
