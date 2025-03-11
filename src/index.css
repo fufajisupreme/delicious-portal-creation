@@ -108,7 +108,7 @@
 }
 
 .glass {
-  @apply bg-white/80 dark:bg-black/30 backdrop-blur-md border border-white/20 dark:border-white/10;
+  @apply bg-white/80 backdrop-blur-md border border-white/20;
 }
 
 .text-gradient {
@@ -134,11 +134,6 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
-/* Dark mode shadow */
-.dark .shadow-soft {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-}
-
 /* Smooth scrolling for anchor links */
 html {
   scroll-behavior: smooth;
@@ -152,10 +147,6 @@ html {
 .hover-lift:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.dark .hover-lift:hover {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 .delay-100 { animation-delay: 100ms; }
