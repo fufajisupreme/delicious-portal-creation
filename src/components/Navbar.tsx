@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -32,12 +33,12 @@ const Navbar = () => {
       <div className="container max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2">
             <div className="bg-primary/10 p-2 rounded-md">
               <Utensils className="h-5 w-5 text-primary" />
             </div>
             <span className="font-display font-bold text-xl">Delish</span>
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
@@ -47,9 +48,9 @@ const Navbar = () => {
             <a href="#categories" className="text-sm font-medium hover:text-primary transition-colors">
               Categories
             </a>
-            <a href="#restaurants" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link to="/restaurants" className="text-sm font-medium hover:text-primary transition-colors">
               Restaurants
-            </a>
+            </Link>
             <a href="#testimonials" className="text-sm font-medium hover:text-primary transition-colors">
               Testimonials
             </a>
@@ -104,13 +105,13 @@ const Navbar = () => {
             >
               Categories
             </a>
-            <a 
-              href="#restaurants" 
+            <Link 
+              to="/restaurants" 
               className="text-sm font-medium hover:text-primary transition-colors py-2 px-4 rounded-md hover:bg-secondary"
               onClick={() => setMobileMenuOpen(false)}
             >
               Restaurants
-            </a>
+            </Link>
             <a 
               href="#testimonials" 
               className="text-sm font-medium hover:text-primary transition-colors py-2 px-4 rounded-md hover:bg-secondary"

@@ -3,6 +3,7 @@ import React from 'react';
 import { Star, Clock, MapPin, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 const restaurants = [
   {
@@ -131,13 +132,15 @@ const FeaturedRestaurants = () => {
             </p>
           </div>
           
-          <Button 
-            variant="ghost" 
-            className="self-start group animate-fade-left"
-          >
-            <span>View All Restaurants</span>
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Button>
+          <Link to="/restaurants">
+            <Button 
+              variant="ghost" 
+              className="self-start group animate-fade-left"
+            >
+              <span>View All Restaurants</span>
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
