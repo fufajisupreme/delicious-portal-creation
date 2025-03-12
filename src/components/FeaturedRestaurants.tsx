@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 
 const restaurants = [
   {
+    id: 1,
     name: 'Fresh Harvest',
     image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&q=80&w=400&h=250',
     cuisine: 'Healthy • Salads • Bowls',
@@ -17,6 +18,7 @@ const restaurants = [
     delay: '0',
   },
   {
+    id: 2,
     name: 'Italiano Pasta',
     image: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?auto=format&fit=crop&q=80&w=400&h=250',
     cuisine: 'Italian • Pasta • Pizza',
@@ -27,6 +29,7 @@ const restaurants = [
     delay: '100',
   },
   {
+    id: 3,
     name: 'Sushi Palace',
     image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=400&h=250',
     cuisine: 'Japanese • Sushi • Asian',
@@ -37,6 +40,7 @@ const restaurants = [
     delay: '200',
   },
   {
+    id: 4,
     name: 'Burger Joint',
     image: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?auto=format&fit=crop&q=80&w=400&h=250',
     cuisine: 'American • Burgers • Fries',
@@ -49,7 +53,7 @@ const restaurants = [
 ];
 
 const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) => {
-  const { name, image, cuisine, rating, deliveryTime, distance, featured, delay } = restaurant;
+  const { id, name, image, cuisine, rating, deliveryTime, distance, featured, delay } = restaurant;
   
   return (
     <div 
@@ -105,9 +109,11 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
       
       {/* Hover overlay with button */}
       <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="default" className="rounded-full shadow-lg">
-          View Menu
-        </Button>
+        <Link to={`/restaurants/${id}`}>
+          <Button variant="default" className="rounded-full shadow-lg">
+            View Menu
+          </Button>
+        </Link>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Star, Clock, MapPin } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { cn } from "@/lib/utils";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { Link } from 'react-router-dom';
 
 // Expanded restaurant data with more options
 const allRestaurants = [
@@ -136,7 +136,7 @@ const allRestaurants = [
 const cuisineOptions = [...new Set(allRestaurants.map(r => r.cuisine))];
 
 const RestaurantCard = ({ restaurant }: { restaurant: typeof allRestaurants[0] }) => {
-  const { name, image, cuisine, tags, rating, deliveryTime, distance, priceRange, featured } = restaurant;
+  const { id, name, image, cuisine, tags, rating, deliveryTime, distance, priceRange, featured } = restaurant;
   
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden border border-food-100 shadow-soft hover-lift transition-all hover:shadow-md">
@@ -186,7 +186,9 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof allRestaurants[0] }
       
       {/* Button */}
       <div className="p-4 pt-0">
-        <Button variant="outline" className="w-full">View Menu</Button>
+        <Link to={`/restaurants/${id}`}>
+          <Button variant="outline" className="w-full">View Menu</Button>
+        </Link>
       </div>
     </div>
   );
