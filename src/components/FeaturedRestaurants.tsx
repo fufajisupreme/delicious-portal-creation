@@ -1,16 +1,8 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Star, Clock, MapPin, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
 const restaurants = [
   {
@@ -55,8 +47,6 @@ const restaurants = [
   },
 ];
 
-const ITEMS_PER_PAGE = 2;
-
 const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) => {
   const { name, image, cuisine, rating, deliveryTime, distance, featured, delay } = restaurant;
   
@@ -68,6 +58,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
       )}
       style={{ animationDelay: `${delay}ms` }}
     >
+      {/* Featured tag */}
       {featured && (
         <div className="absolute top-3 left-3 z-10">
           <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary text-white">
@@ -76,6 +67,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
         </div>
       )}
       
+      {/* Restaurant image */}
       <div className="relative w-full h-48 overflow-hidden">
         <img 
           src={image} 
@@ -83,9 +75,11 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         
+        {/* Image overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
       </div>
       
+      {/* Restaurant info */}
       <div className="p-5">
         <h3 className="font-semibold text-lg mb-1">{name}</h3>
         <p className="text-muted-foreground text-sm mb-3">{cuisine}</p>
@@ -108,6 +102,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
         </div>
       </div>
       
+      {/* Hover overlay with button */}
       <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button variant="default" className="rounded-full shadow-lg">
           View Menu
@@ -118,13 +113,6 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
 };
 
 const FeaturedRestaurants = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  
-  const totalPages = Math.ceil(restaurants.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentRestaurants = restaurants.slice(startIndex, endIndex);
-
   return (
     <section id="restaurants" className="section-padding">
       <div className="container mx-auto px-6">
@@ -152,40 +140,11 @@ const FeaturedRestaurants = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-          {currentRestaurants.map((restaurant, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {restaurants.map((restaurant, index) => (
             <RestaurantCard key={index} restaurant={restaurant} />
           ))}
         </div>
-
-        <Pagination className="mt-8">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className={cn(currentPage === 1 && "pointer-events-none opacity-50")}
-              />
-            </PaginationItem>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  onClick={() => setCurrentPage(page)}
-                  isActive={currentPage === page}
-                >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                className={cn(currentPage === totalPages && "pointer-events-none opacity-50")}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
       </div>
     </section>
   );
