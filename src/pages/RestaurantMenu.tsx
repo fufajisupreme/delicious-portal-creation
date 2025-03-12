@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Star, Clock, MapPin, ChevronLeft, Plus, ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -207,6 +207,7 @@ const MenuItemCard = ({ item, onAddToCart }: { item: MenuItem; onAddToCart: (ite
 
 const RestaurantMenu = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('featured');
   const [cartItems, setCartItems] = useState<{ item: MenuItem; quantity: number }[]>([]);
   
@@ -264,6 +265,17 @@ const RestaurantMenu = () => {
   // Calculate total items and price
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   const totalPrice = cartItems.reduce((total, item) => total + (item.item.price * item.quantity), 0);
+  
+  // Handle proceeding to checkout
+  const handleCheckout = () => {
+    navigate('/checkout', {
+      state: {
+        cartItems,
+        restaurantName: restaurant.name,
+        restaurantId: restaurant.id
+      }
+    });
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -379,9 +391,9 @@ const RestaurantMenu = () => {
                       </div>
                     </div>
                     
-                    <Button className="w-full">
+                    <Button className="w-full" onClick={handleCheckout}>
                       <ShoppingCart className="mr-2 h-4 w-4" />
-                      Checkout ({totalItems} {totalItems === 1 ? 'item' : 'items'})
+                      Proceed to Checkout ({totalItems} {totalItems === 1 ? 'item' : 'items'})
                     </Button>
                   </>
                 ) : (
