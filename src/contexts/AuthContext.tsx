@@ -2,11 +2,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
 
+// User role type
+export type UserRole = 'customer' | 'restaurant_owner';
+
 // Define user type
 export interface User {
   id: string;
   email: string;
   name: string;
+  role: UserRole;
 }
 
 // Define auth context type
@@ -14,9 +18,10 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string, role: UserRole) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  isRestaurantOwner: boolean;
 }
 
 // Create context with default values
@@ -27,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => false,
   logout: () => {},
   isAuthenticated: false,
+  isRestaurantOwner: false,
 });
 
 // Custom hook to use the auth context
@@ -72,7 +78,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loggedInUser = {
       id: userEntry.id,
       email: userEntry.email,
-      name: userEntry.name
+      name: userEntry.name,
+      role: userEntry.role
     };
 
     // Store user in state and localStorage
@@ -83,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Signup function
-  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
+  const signup = async (name: string, email: string, password: string, role: UserRole): Promise<boolean> => {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -103,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: newUserId,
       email,
       name,
+      role,
       password
     };
 
@@ -110,7 +118,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newUser = {
       id: newUserId,
       email,
-      name
+      name,
+      role
     };
 
     // Store user in state and localStorage
@@ -133,7 +142,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     signup,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    isRestaurantOwner: user?.role === 'restaurant_owner'
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
