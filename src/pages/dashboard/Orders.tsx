@@ -7,8 +7,22 @@ import { Input } from '@/components/ui/input';
 import { Search, Filter, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Define the OrderStatus type explicitly
+type OrderStatus = 'pending' | 'completed' | 'cancelled';
+
+interface Order {
+  id: string;
+  customer: string;
+  date: string;
+  items: Array<{ name: string; quantity: number; price: number }>;
+  total: number;
+  status: OrderStatus;
+  address: string;
+  phone: string;
+}
+
 // Mock data - would be fetched from API in real app
-const mockOrders = [
+const mockOrders: Order[] = [
   {
     id: 'ORD-1001',
     customer: 'John Doe',
@@ -78,19 +92,6 @@ const mockOrders = [
     phone: '(555) 789-0123'
   }
 ];
-
-type OrderStatus = 'pending' | 'completed' | 'cancelled';
-
-interface Order {
-  id: string;
-  customer: string;
-  date: string;
-  items: Array<{ name: string; quantity: number; price: number }>;
-  total: number;
-  status: OrderStatus;
-  address: string;
-  phone: string;
-}
 
 const Orders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
