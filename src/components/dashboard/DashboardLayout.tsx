@@ -1,17 +1,10 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Store, 
-  ShoppingBag, 
-  Settings, 
-  Menu,
-  X
-} from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from '@/lib/utils';
+import { LayoutDashboard, UtensilsCrossed, ShoppingBag, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,108 +12,113 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const location = useLocation();
-  const [isOpen, setIsOpen] = React.useState(false);
+  const { user, logout } = useAuth();
   
-  const navigationItems = [
-    { 
-      name: "Dashboard", 
-      path: "/dashboard", 
-      icon: <LayoutDashboard className="h-5 w-5 mr-2" /> 
-    },
-    { 
-      name: "Restaurant Details", 
-      path: "/dashboard/restaurant", 
-      icon: <Store className="h-5 w-5 mr-2" /> 
-    },
-    { 
-      name: "Orders", 
-      path: "/dashboard/orders", 
-      icon: <ShoppingBag className="h-5 w-5 mr-2" /> 
-    },
-    { 
-      name: "Settings", 
-      path: "/dashboard/settings", 
-      icon: <Settings className="h-5 w-5 mr-2" /> 
-    }
-  ];
-  
-  const NavLink = ({ item }: { item: typeof navigationItems[0] }) => (
-    <Link 
-      to={item.path} 
-      onClick={() => setIsOpen(false)}
-      className={cn(
-        "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-secondary",
-        location.pathname === item.path 
-          ? "bg-secondary text-primary" 
-          : "text-muted-foreground"
-      )}
-    >
-      {item.icon}
-      {item.name}
-    </Link>
-  );
-  
-  return (
-    <div className="min-h-screen flex flex-col">
-      {/* Mobile header */}
-      <header className="md:hidden border-b sticky top-0 z-30 bg-white">
-        <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <Link to="/" className="font-display font-bold text-xl">
-            Delish Owner
-          </Link>
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72">
-              <div className="px-2 py-6">
-                <div className="mb-8 flex items-center">
-                  <Link to="/" className="font-display font-bold text-xl">
-                    Delish Owner
-                  </Link>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="ml-auto" 
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
-                <nav className="space-y-1">
-                  {navigationItems.map((item) => (
-                    <NavLink key={item.path} item={item} />
-                  ))}
-                </nav>
-              </div>
-            </SheetContent>
-          </Sheet>
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+  };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Restaurant Owner Dashboard</h1>
+          <p className="mb-4">You need to be logged in to access the dashboard.</p>
+          <Button asChild>
+            <Link to="/">Go to Homepage</Link>
+          </Button>
         </div>
-      </header>
-      
-      <div className="flex-1 flex flex-col md:flex-row">
-        {/* Sidebar for desktop */}
-        <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r">
-          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-            <div className="flex items-center h-16 flex-shrink-0 px-4 border-b">
-              <Link to="/" className="font-display font-bold text-xl">
-                Delish Owner
-              </Link>
-            </div>
-            <div className="flex-1 flex flex-col p-4 space-y-1">
-              {navigationItems.map((item) => (
-                <NavLink key={item.path} item={item} />
-              ))}
-            </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-64 bg-white border-r border-gray-200 shadow-sm hidden md:block">
+        <div className="flex flex-col h-full">
+          <div className="p-4 border-b">
+            <h2 className="text-xl font-bold">Restaurant Dashboard</h2>
+            <p className="text-sm text-muted-foreground">Manage your restaurant</p>
           </div>
-        </aside>
-        
-        {/* Main content */}
-        <main className="flex-1 md:pl-64">
-          {children}
-        </main>
+          
+          <nav className="flex-1 p-4 space-y-2">
+            <Link to="/dashboard">
+              <Button
+                variant={isActive('/dashboard') ? 'default' : 'ghost'}
+                className="w-full justify-start"
+              >
+                <LayoutDashboard className="mr-2 h-5 w-5" />
+                Dashboard
+              </Button>
+            </Link>
+            
+            <Link to="/dashboard/restaurant">
+              <Button 
+                variant={isActive('/dashboard/restaurant') ? 'default' : 'ghost'}
+                className="w-full justify-start"
+              >
+                <UtensilsCrossed className="mr-2 h-5 w-5" />
+                Restaurant Details
+              </Button>
+            </Link>
+            
+            <Link to="/dashboard/orders">
+              <Button 
+                variant={isActive('/dashboard/orders') ? 'default' : 'ghost'}
+                className="w-full justify-start"
+              >
+                <ShoppingBag className="mr-2 h-5 w-5" />
+                Orders
+              </Button>
+            </Link>
+          </nav>
+          
+          <div className="p-4 border-t mt-auto">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-5 w-5" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Mobile sidebar (shown as top nav) */}
+      <div className="md:hidden w-full bg-white border-b border-gray-200 shadow-sm p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">Restaurant Dashboard</h2>
+          <div className="flex space-x-2">
+            <Link to="/dashboard">
+              <Button size="icon" variant={isActive('/dashboard') ? 'default' : 'ghost'}>
+                <LayoutDashboard className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/dashboard/restaurant">
+              <Button size="icon" variant={isActive('/dashboard/restaurant') ? 'default' : 'ghost'}>
+                <UtensilsCrossed className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/dashboard/orders">
+              <Button size="icon" variant={isActive('/dashboard/orders') ? 'default' : 'ghost'}>
+                <ShoppingBag className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main content */}
+      <div className="flex-1 p-6 md:p-8">
+        {children}
       </div>
     </div>
   );

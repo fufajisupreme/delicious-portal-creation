@@ -1,245 +1,267 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Order, OrderStatus } from '@/types/order';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Search, Filter, Check, X } from 'lucide-react';
+import { toast } from 'sonner';
 
-const statusStyles = {
-  pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-  preparing: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-  ready: "bg-green-100 text-green-800 hover:bg-green-100",
-  delivered: "bg-gray-100 text-gray-800 hover:bg-gray-100",
-  cancelled: "bg-red-100 text-red-800 hover:bg-red-100"
-};
+// Mock data - would be fetched from API in real app
+const mockOrders = [
+  {
+    id: 'ORD-1001',
+    customer: 'John Doe',
+    date: '2024-03-10T15:30:00',
+    items: [
+      { name: 'Margherita Pizza', quantity: 2, price: 12.99 },
+      { name: 'Garlic Breadsticks', quantity: 1, price: 4.99 },
+      { name: 'Coca Cola', quantity: 2, price: 1.99 }
+    ],
+    total: 34.95,
+    status: 'pending',
+    address: '123 Main St, Anytown, CA 94105',
+    phone: '(555) 123-4567'
+  },
+  {
+    id: 'ORD-1002',
+    customer: 'Jane Smith',
+    date: '2024-03-10T14:15:00',
+    items: [
+      { name: 'Chicken Alfredo', quantity: 1, price: 14.99 },
+      { name: 'Caesar Salad', quantity: 1, price: 8.99 }
+    ],
+    total: 23.98,
+    status: 'completed',
+    address: '456 Oak Ave, Anytown, CA 94106',
+    phone: '(555) 987-6543'
+  },
+  {
+    id: 'ORD-1003',
+    customer: 'Robert Johnson',
+    date: '2024-03-10T13:45:00',
+    items: [
+      { name: 'Pepperoni Pizza', quantity: 1, price: 13.99 },
+      { name: 'Buffalo Wings', quantity: 1, price: 9.99 },
+      { name: 'Sprite', quantity: 1, price: 1.99 }
+    ],
+    total: 25.97,
+    status: 'pending',
+    address: '789 Pine St, Anytown, CA 94107',
+    phone: '(555) 456-7890'
+  },
+  {
+    id: 'ORD-1004',
+    customer: 'Emily Williams',
+    date: '2024-03-09T18:20:00',
+    items: [
+      { name: 'Vegetarian Pizza', quantity: 1, price: 13.99 },
+      { name: 'Greek Salad', quantity: 1, price: 7.99 }
+    ],
+    total: 21.98,
+    status: 'completed',
+    address: '321 Elm St, Anytown, CA 94108',
+    phone: '(555) 321-6547'
+  },
+  {
+    id: 'ORD-1005',
+    customer: 'Michael Brown',
+    date: '2024-03-09T19:10:00',
+    items: [
+      { name: 'Supreme Pizza', quantity: 1, price: 15.99 },
+      { name: 'Cheesy Breadsticks', quantity: 1, price: 5.99 },
+      { name: 'Diet Coke', quantity: 2, price: 1.99 }
+    ],
+    total: 25.96,
+    status: 'completed',
+    address: '654 Maple Ave, Anytown, CA 94109',
+    phone: '(555) 789-0123'
+  }
+];
 
-const OrderDetails = ({ order }: { order: Order }) => {
-  const [status, setStatus] = useState<OrderStatus>(order.status);
+type OrderStatus = 'pending' | 'completed' | 'cancelled';
 
-  // Status change handler with proper type
-  const handleStatusChange = (newStatus: OrderStatus) => {
-    setStatus(newStatus);
-    // In a real app, we would update the order status in the database here
+interface Order {
+  id: string;
+  customer: string;
+  date: string;
+  items: Array<{ name: string; quantity: number; price: number }>;
+  total: number;
+  status: OrderStatus;
+  address: string;
+  phone: string;
+}
+
+const Orders: React.FC = () => {
+  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
+  const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
+    setOrders(orders.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+    
+    toast.success(`Order ${orderId} marked as ${newStatus}`);
+  };
+
+  const toggleOrderDetails = (orderId: string) => {
+    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const matchesFilter = filter === 'all' || order.status === filter;
+    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          order.customer.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString();
   };
 
   return (
-    <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
-      <DialogHeader>
-        <DialogTitle>Order #{order.id}</DialogTitle>
-      </DialogHeader>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-        <div>
-          <h3 className="font-medium mb-2">Customer Information</h3>
-          <p>{order.customer}</p>
-          <p className="text-sm text-muted-foreground">{order.phone}</p>
-          <p className="text-sm text-muted-foreground mt-1">{order.address}</p>
-          
-          <h3 className="font-medium mt-4 mb-2">Order Status</h3>
-          <Select value={status} onValueChange={(value: OrderStatus) => handleStatusChange(value)}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="preparing">Preparing</SelectItem>
-              <SelectItem value="ready">Ready for Pickup</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <div className="mt-6">
-            <Label htmlFor="notes">Add Note</Label>
-            <Input id="notes" placeholder="Add a note about this order" className="mt-2" />
-            <Button size="sm" className="mt-2">Add Note</Button>
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="font-medium mb-2">Order Items</h3>
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {order.items.map((item, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="p-4 border-t">
-              <div className="flex justify-between font-medium">
-                <span>Total</span>
-                <span>${order.total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </DialogContent>
-  );
-};
-
-const Orders = () => {
-  const [filter, setFilter] = useState<string>("all");
-  
-  // Sample data with proper OrderStatus type
-  const sampleOrders: Order[] = [
-    {
-      id: "ORD-001",
-      customer: "John Smith",
-      date: "2023-10-15T14:30:00",
-      items: [
-        { name: "Margherita Pizza", quantity: 1, price: 12.99 },
-        { name: "Garlic Bread", quantity: 1, price: 4.99 }
-      ],
-      total: 17.98,
-      status: "pending",
-      address: "123 Main St, Apt 4B, New York, NY 10001",
-      phone: "(555) 123-4567"
-    },
-    {
-      id: "ORD-002",
-      customer: "Emma Johnson",
-      date: "2023-10-15T15:45:00",
-      items: [
-        { name: "Chicken Caesar Salad", quantity: 1, price: 10.99 },
-        { name: "Iced Tea", quantity: 1, price: 2.99 }
-      ],
-      total: 13.98,
-      status: "preparing",
-      address: "456 Park Ave, Suite 201, New York, NY 10022",
-      phone: "(555) 987-6543"
-    },
-    {
-      id: "ORD-003",
-      customer: "Michael Brown",
-      date: "2023-10-15T16:20:00",
-      items: [
-        { name: "Double Cheeseburger", quantity: 1, price: 9.99 },
-        { name: "French Fries", quantity: 1, price: 3.99 },
-        { name: "Chocolate Milkshake", quantity: 1, price: 4.99 }
-      ],
-      total: 18.97,
-      status: "ready",
-      address: "789 Broadway, New York, NY 10003",
-      phone: "(555) 246-8102"
-    },
-    {
-      id: "ORD-004",
-      customer: "Sophia Garcia",
-      date: "2023-10-15T12:15:00",
-      items: [
-        { name: "Vegetarian Pasta", quantity: 1, price: 14.99 },
-        { name: "Sparkling Water", quantity: 1, price: 1.99 }
-      ],
-      total: 16.98,
-      status: "delivered",
-      address: "321 5th Ave, New York, NY 10016",
-      phone: "(555) 369-7415"
-    },
-    {
-      id: "ORD-005",
-      customer: "William Taylor",
-      date: "2023-10-15T11:30:00",
-      items: [
-        { name: "Breakfast Burrito", quantity: 1, price: 8.99 },
-        { name: "Coffee", quantity: 1, price: 2.49 }
-      ],
-      total: 11.48,
-      status: "cancelled",
-      address: "654 Madison Ave, New York, NY 10065",
-      phone: "(555) 852-9631"
-    }
-  ];
-  
-  // Filter orders based on status
-  const filteredOrders = filter === "all" 
-    ? sampleOrders 
-    : sampleOrders.filter(order => order.status === filter);
-
-  return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <h1 className="text-2xl font-bold">Orders</h1>
-          <div className="mt-4 md:mt-0">
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Orders</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="preparing">Preparing</SelectItem>
-                <SelectItem value="ready">Ready for Pickup</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Orders</h1>
+          <p className="text-muted-foreground">Manage and track customer orders</p>
+        </div>
+        
+        {/* Filters and search */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex space-x-2">
+            <Button 
+              variant={filter === 'all' ? 'default' : 'outline'} 
+              onClick={() => setFilter('all')}
+            >
+              All
+            </Button>
+            <Button 
+              variant={filter === 'pending' ? 'default' : 'outline'} 
+              onClick={() => setFilter('pending')}
+            >
+              Pending
+            </Button>
+            <Button 
+              variant={filter === 'completed' ? 'default' : 'outline'} 
+              onClick={() => setFilter('completed')}
+            >
+              Completed
+            </Button>
+            <Button 
+              variant={filter === 'cancelled' ? 'default' : 'outline'} 
+              onClick={() => setFilter('cancelled')}
+            >
+              Cancelled
+            </Button>
+          </div>
+          
+          <div className="relative w-full md:w-auto">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search orders..."
+              className="pl-8 w-full md:w-[250px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>#{order.id}</TableCell>
-                    <TableCell>{order.customer}</TableCell>
-                    <TableCell>{new Date(order.date).toLocaleString()}</TableCell>
-                    <TableCell>${order.total.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={statusStyles[order.status]}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">Details</Button>
-                        </DialogTrigger>
-                        <OrderDetails order={order} />
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {/* Orders list */}
+        <div className="space-y-4">
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No orders found</p>
+            </div>
+          ) : (
+            filteredOrders.map(order => (
+              <Card key={order.id} className="overflow-hidden">
+                <div className="p-4 cursor-pointer" onClick={() => toggleOrderDetails(order.id)}>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold">{order.id}</span>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                          order.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{order.customer}</span>
+                    </div>
+                    
+                    <div className="flex mt-2 md:mt-0 items-center justify-between md:justify-end space-x-4">
+                      <span className="text-sm">{formatDate(order.date)}</span>
+                      <span className="font-medium">${order.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {expandedOrderId === order.id && (
+                  <CardContent className="pb-4 border-t">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="font-semibold text-sm mb-2">Order Details</h3>
+                        <ul className="space-y-2 text-sm">
+                          {order.items.map((item, idx) => (
+                            <li key={idx} className="flex justify-between">
+                              <span>{item.quantity}x {item.name}</span>
+                              <span>${(item.price * item.quantity).toFixed(2)}</span>
+                            </li>
+                          ))}
+                          <li className="flex justify-between font-bold pt-2 border-t">
+                            <span>Total</span>
+                            <span>${order.total.toFixed(2)}</span>
+                          </li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-semibold text-sm mb-2">Customer Information</h3>
+                        <div className="space-y-2 text-sm">
+                          <p><span className="text-muted-foreground">Name:</span> {order.customer}</p>
+                          <p><span className="text-muted-foreground">Phone:</span> {order.phone}</p>
+                          <p><span className="text-muted-foreground">Address:</span> {order.address}</p>
+                        </div>
+                        
+                        {order.status === 'pending' && (
+                          <div className="mt-4 flex space-x-2">
+                            <Button 
+                              size="sm" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStatusChange(order.id, 'completed');
+                              }}
+                            >
+                              <Check className="mr-1 h-4 w-4" />
+                              Complete
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStatusChange(order.id, 'cancelled');
+                              }}
+                            >
+                              <X className="mr-1 h-4 w-4" />
+                              Cancel
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            ))
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
