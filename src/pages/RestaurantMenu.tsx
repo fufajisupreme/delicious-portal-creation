@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Star, Clock, MapPin, ChevronLeft, Plus, ShoppingCart, Trash, RefreshCw, Bell } from 'lucide-react';
@@ -10,13 +9,10 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { toast } from "sonner";
 
-// Expanded restaurant data with menu items
 const getRestaurants = () => {
-  // Try to get restaurants from localStorage first (for owner-added restaurants)
   try {
     const localRestaurants = JSON.parse(localStorage.getItem('restaurants') || '[]');
     if (localRestaurants && localRestaurants.length > 0) {
-      // Merge with base restaurants
       return [...localRestaurants, ...allRestaurants];
     }
   } catch (error) {
@@ -95,7 +91,7 @@ const allRestaurants = [
       ],
       desserts: [
         { id: 'des1', name: 'Tiramisu', price: 9.99, image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&q=80&w=300&h=200', description: 'Classic Italian dessert with coffee-soaked ladyfingers and mascarpone cream' },
-        { id: 'des2', name: 'Panna Cotta', price: 8.99, image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=300&h=200', description: 'Vanilla bean and honey with berry compote' },
+        { id: 'des2', name: 'Panna Cotta', price: 8.99, image: 'https://images.unsplash.com/photo-1488477129229-6428a0291777?auto=format&fit=crop&q=80&w=300&h=200', description: 'Vanilla bean and honey with berry compote' },
       ],
     }
   },
@@ -168,7 +164,6 @@ const allRestaurants = [
       ],
     }
   },
-  // ... Additional 6 restaurants could be added with the same structure
 ];
 
 interface MenuItem {
@@ -184,7 +179,6 @@ interface MenuSection {
   items: MenuItem[];
 }
 
-// New component for real-time order status
 const OrderStatus = ({ orderId }: { orderId: string | null }) => {
   const [status, setStatus] = useState<'pending' | 'preparing' | 'ready' | 'delivering' | 'delivered' | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -192,11 +186,9 @@ const OrderStatus = ({ orderId }: { orderId: string | null }) => {
   useEffect(() => {
     if (!orderId) return;
     
-    // Simulate initial status
     setStatus('pending');
     setLastUpdate(new Date());
     
-    // Simulate status updates over time
     const updateInterval = setInterval(() => {
       setStatus(currentStatus => {
         if (!currentStatus) return 'pending';
@@ -219,7 +211,7 @@ const OrderStatus = ({ orderId }: { orderId: string | null }) => {
         
         return newStatus;
       });
-    }, 30000); // Update every 30 seconds
+    }, 30000);
     
     return () => clearInterval(updateInterval);
   }, [orderId]);
@@ -318,10 +310,8 @@ const RestaurantMenu = () => {
   const [cartItems, setCartItems] = useState<{ item: MenuItem; quantity: number }[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
   
-  // Find the restaurant by ID from combined list
   const restaurant = getRestaurants().find(r => r.id.toString() === id);
   
-  // Load cart from localStorage on initial render
   useEffect(() => {
     if (!id) return;
     
@@ -335,7 +325,6 @@ const RestaurantMenu = () => {
     }
   }, [id]);
   
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     if (!id) return;
     localStorage.setItem(`cart-${id}`, JSON.stringify(cartItems));
@@ -358,13 +347,11 @@ const RestaurantMenu = () => {
     );
   }
   
-  // Transform the menu object into an array of sections
   const menuSections: MenuSection[] = Object.entries(restaurant.menu).map(([key, items]) => ({
-    title: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize first letter
-    items: items,
+    title: key.charAt(0).toUpperCase() + key.slice(1),
+    items: items as MenuItem[],
   }));
   
-  // Handle adding item to cart
   const handleAddToCart = (item: MenuItem) => {
     setCartItems(prev => {
       const existingItem = prev.find(cartItem => cartItem.item.id === item.id);
@@ -389,20 +376,17 @@ const RestaurantMenu = () => {
     });
   };
   
-  // Handle removing item from cart
   const handleRemoveFromCart = (itemId: string) => {
     setCartItems(prev => {
       const existingItem = prev.find(cartItem => cartItem.item.id === itemId);
       
       if (existingItem && existingItem.quantity > 1) {
-        // If quantity is more than 1, just decrease the quantity
         return prev.map(cartItem => 
           cartItem.item.id === itemId 
             ? { ...cartItem, quantity: cartItem.quantity - 1 } 
             : cartItem
         );
       } else {
-        // If quantity is 1, remove the item from cart
         return prev.filter(cartItem => cartItem.item.id !== itemId);
       }
     });
@@ -412,7 +396,6 @@ const RestaurantMenu = () => {
     });
   };
   
-  // Handle deleting item completely from cart
   const handleDeleteFromCart = (itemId: string) => {
     setCartItems(prev => prev.filter(cartItem => cartItem.item.id !== itemId));
     
@@ -421,11 +404,9 @@ const RestaurantMenu = () => {
     });
   };
   
-  // Calculate total items and price
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   const totalPrice = cartItems.reduce((total, item) => total + (item.item.price * item.quantity), 0);
   
-  // Handle proceeding to checkout
   const handleCheckout = () => {
     const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
     setOrderId(newOrderId);
@@ -445,7 +426,6 @@ const RestaurantMenu = () => {
       <Navbar />
       
       <main className="flex-grow pt-16 pb-16">
-        {/* Hero banner */}
         <div 
           className="h-64 md:h-80 relative"
           style={{
@@ -490,7 +470,6 @@ const RestaurantMenu = () => {
           <p className="text-lg text-muted-foreground mb-8">{restaurant.description}</p>
           
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Menu section */}
             <div className="flex-grow">
               <Tabs defaultValue="featured" className="w-full" onValueChange={setActiveTab}>
                 <TabsList className="mb-6 flex w-full h-auto flex-wrap gap-2">
@@ -523,7 +502,6 @@ const RestaurantMenu = () => {
               </Tabs>
             </div>
             
-            {/* Cart section */}
             <div className="lg:w-1/3">
               <div className="sticky top-24 bg-white border rounded-lg p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -533,7 +511,6 @@ const RestaurantMenu = () => {
                   </Badge>
                 </div>
                 
-                {/* Order status if there's an active order */}
                 <OrderStatus orderId={orderId} />
                 
                 {cartItems.length > 0 ? (
