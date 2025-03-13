@@ -8,8 +8,11 @@ import FeaturedRestaurants from '@/components/FeaturedRestaurants';
 import Testimonials from '@/components/Testimonials';
 import DownloadCTA from '@/components/DownloadCTA';
 import Footer from '@/components/Footer';
+import { useLocation } from 'react-router-dom';
 
 const Index = () => {
+  const { pathname, hash } = useLocation();
+
   // Smoothly reveal content on page load
   useEffect(() => {
     document.body.classList.add('animate-fade-in');
@@ -38,11 +41,27 @@ const Index = () => {
     
     document.addEventListener('click', handleAnchorClick);
     
+    // Scroll to top when navigating to this page
+    window.scrollTo(0, 0);
+
+    // If there's a hash in the URL, scroll to that element
+    if (hash) {
+      const id = hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          const yOffset = -80; // Header height offset
+          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+    
     return () => {
       document.removeEventListener('click', handleAnchorClick);
       document.body.classList.remove('animate-fade-in');
     };
-  }, []);
+  }, [pathname, hash]);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -52,7 +71,9 @@ const Index = () => {
         <HeroSection />
         <FoodCategories />
         <HowItWorks />
-        <FeaturedRestaurants />
+        <div id="featured-restaurants">
+          <FeaturedRestaurants />
+        </div>
         <Testimonials />
         <DownloadCTA />
       </main>

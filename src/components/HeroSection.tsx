@@ -1,9 +1,23 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, MapPin, Clock, Star } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
+  const handleOrderNow = () => {
+    // Scroll to the restaurants section on the home page
+    const restaurantsSection = document.getElementById('featured-restaurants');
+    if (restaurantsSection) {
+      restaurantsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleViewRestaurants = () => {
+    navigate('/restaurants');
+  };
+
   return (
     <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-32">
       {/* Background gradient */}
@@ -34,11 +48,20 @@ const HeroSection = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4 animate-fade-down delay-300">
-              <Button size="lg" className="rounded-full shadow-md shadow-primary/20 group">
+              <Button 
+                size="lg" 
+                className="rounded-full shadow-md shadow-primary/20 group"
+                onClick={handleOrderNow}
+              >
                 Order Now
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button size="lg" variant="outline" className="rounded-full">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="rounded-full"
+                onClick={handleViewRestaurants}
+              >
                 View Restaurants
               </Button>
             </div>

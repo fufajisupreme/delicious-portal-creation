@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Clock, MapPin, Search, SlidersHorizontal } from 'lucide-react';
@@ -24,7 +23,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { cn } from '@/lib/utils';
 
-// Base restaurant data
 const baseRestaurants = [
   {
     id: 1,
@@ -124,7 +122,6 @@ const baseRestaurants = [
   },
 ];
 
-// Get all restaurants including owner restaurants
 const getAllRestaurants = () => {
   try {
     const ownerRestaurants = JSON.parse(localStorage.getItem('restaurants') || '[]');
@@ -136,6 +133,10 @@ const getAllRestaurants = () => {
 };
 
 const Restaurants = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   const [restaurants, setRestaurants] = useState(getAllRestaurants());
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredRestaurants, setFilteredRestaurants] = useState(restaurants);
@@ -144,14 +145,11 @@ const Restaurants = () => {
   const [ratingFilter, setRatingFilter] = useState([0]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
-  // Get unique cuisines for the filter
   const cuisines = ['all', ...new Set(restaurants.map(r => r.cuisine.toLowerCase()))];
   
-  // Update filtered restaurants when filters change
   useEffect(() => {
     let result = restaurants;
     
-    // Search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(restaurant => 
@@ -161,19 +159,16 @@ const Restaurants = () => {
       );
     }
     
-    // Cuisine filter
     if (cuisineFilter !== 'all') {
       result = result.filter(restaurant => 
         restaurant.cuisine.toLowerCase() === cuisineFilter
       );
     }
     
-    // Price filter
     if (priceFilter !== 'all') {
       result = result.filter(restaurant => restaurant.priceRange === priceFilter);
     }
     
-    // Rating filter
     if (ratingFilter[0] > 0) {
       result = result.filter(restaurant => restaurant.rating >= ratingFilter[0]);
     }
@@ -181,7 +176,6 @@ const Restaurants = () => {
     setFilteredRestaurants(result);
   }, [searchTerm, cuisineFilter, priceFilter, ratingFilter, restaurants]);
   
-  // Load restaurants including owner restaurants
   useEffect(() => {
     setRestaurants(getAllRestaurants());
   }, []);
@@ -195,7 +189,6 @@ const Restaurants = () => {
           <div className="space-y-6">
             <h1 className="text-3xl font-bold">Restaurants</h1>
             
-            {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -273,7 +266,6 @@ const Restaurants = () => {
                         </DrawerClose>
                         <DrawerClose asChild>
                           <Button onClick={() => {
-                            // Reset all filters
                             setSearchTerm('');
                             setCuisineFilter('all');
                             setPriceFilter('all');
@@ -287,7 +279,6 @@ const Restaurants = () => {
               </div>
             </div>
             
-            {/* Results */}
             {filteredRestaurants.length === 0 ? (
               <div className="text-center py-12">
                 <h2 className="text-xl font-semibold mb-2">No restaurants found</h2>
