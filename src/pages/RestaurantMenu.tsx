@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Star, Clock, MapPin, ChevronLeft, Plus, ShoppingCart } from 'lucide-react';
+import { Star, Clock, MapPin, ChevronLeft, Plus, ShoppingCart, Trash, RefreshCw, Bell } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,20 @@ import Footer from '@/components/Footer';
 import { toast } from "sonner";
 
 // Expanded restaurant data with menu items
+const getRestaurants = () => {
+  // Try to get restaurants from localStorage first (for owner-added restaurants)
+  try {
+    const localRestaurants = JSON.parse(localStorage.getItem('restaurants') || '[]');
+    if (localRestaurants && localRestaurants.length > 0) {
+      // Merge with base restaurants
+      return [...localRestaurants, ...allRestaurants];
+    }
+  } catch (error) {
+    console.error('Error getting restaurants from localStorage:', error);
+  }
+  return allRestaurants;
+};
+
 const allRestaurants = [
   {
     id: 1,
@@ -170,6 +184,98 @@ interface MenuSection {
   items: MenuItem[];
 }
 
+// New component for real-time order status
+const OrderStatus = ({ orderId }: { orderId: string | null }) => {
+  const [status, setStatus] = useState<'pending' | 'preparing' | 'ready' | 'delivering' | 'delivered' | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (!orderId) return;
+    
+    // Simulate initial status
+    setStatus('pending');
+    setLastUpdate(new Date());
+    
+    // Simulate status updates over time
+    const updateInterval = setInterval(() => {
+      setStatus(currentStatus => {
+        if (!currentStatus) return 'pending';
+        
+        const statusFlow: Record<string, 'pending' | 'preparing' | 'ready' | 'delivering' | 'delivered'> = {
+          'pending': 'preparing',
+          'preparing': 'ready',
+          'ready': 'delivering',
+          'delivering': 'delivered',
+          'delivered': 'delivered'
+        };
+        
+        const newStatus = statusFlow[currentStatus];
+        if (newStatus !== currentStatus) {
+          setLastUpdate(new Date());
+          toast.info(`Order status updated to: ${newStatus.toUpperCase()}`, {
+            icon: <Bell className="h-4 w-4" />
+          });
+        }
+        
+        return newStatus;
+      });
+    }, 30000); // Update every 30 seconds
+    
+    return () => clearInterval(updateInterval);
+  }, [orderId]);
+  
+  if (!status || !orderId) return null;
+  
+  const statusColors: Record<string, string> = {
+    'pending': 'bg-yellow-100 text-yellow-800',
+    'preparing': 'bg-blue-100 text-blue-800',
+    'ready': 'bg-green-100 text-green-800',
+    'delivering': 'bg-purple-100 text-purple-800',
+    'delivered': 'bg-gray-100 text-gray-800'
+  };
+  
+  return (
+    <div className="border rounded-lg p-4 mt-4 bg-background shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-medium">Order Status</h3>
+        <Badge variant="outline" className="flex gap-1">
+          <RefreshCw className="h-3 w-3 animate-spin" />
+          Live Updates
+        </Badge>
+      </div>
+      
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-muted-foreground">Order #{orderId.slice(-4)}</span>
+          <span className="text-sm text-muted-foreground">
+            {lastUpdate ? `Updated: ${lastUpdate.toLocaleTimeString()}` : ''}
+          </span>
+        </div>
+        
+        <div className="flex items-center">
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[status]}`}>
+            {status.toUpperCase()}
+          </span>
+          
+          <div className="ml-4 flex-1">
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-500"
+                style={{ 
+                  width: status === 'pending' ? '20%' : 
+                        status === 'preparing' ? '40%' :
+                        status === 'ready' ? '60%' :
+                        status === 'delivering' ? '80%' : '100%' 
+                }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MenuItemCard = ({ item, onAddToCart }: { item: MenuItem; onAddToCart: (item: MenuItem) => void }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 p-4 border rounded-lg hover:border-primary/50 hover:bg-secondary/20 transition-colors">
@@ -210,9 +316,30 @@ const RestaurantMenu = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('featured');
   const [cartItems, setCartItems] = useState<{ item: MenuItem; quantity: number }[]>([]);
+  const [orderId, setOrderId] = useState<string | null>(null);
   
-  // Find the restaurant by ID
-  const restaurant = allRestaurants.find(r => r.id === Number(id));
+  // Find the restaurant by ID from combined list
+  const restaurant = getRestaurants().find(r => r.id.toString() === id);
+  
+  // Load cart from localStorage on initial render
+  useEffect(() => {
+    if (!id) return;
+    
+    try {
+      const savedCart = localStorage.getItem(`cart-${id}`);
+      if (savedCart) {
+        setCartItems(JSON.parse(savedCart));
+      }
+    } catch (error) {
+      console.error('Error loading cart:', error);
+    }
+  }, [id]);
+  
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    if (!id) return;
+    localStorage.setItem(`cart-${id}`, JSON.stringify(cartItems));
+  }, [cartItems, id]);
   
   if (!restaurant) {
     return (
@@ -262,17 +389,53 @@ const RestaurantMenu = () => {
     });
   };
   
+  // Handle removing item from cart
+  const handleRemoveFromCart = (itemId: string) => {
+    setCartItems(prev => {
+      const existingItem = prev.find(cartItem => cartItem.item.id === itemId);
+      
+      if (existingItem && existingItem.quantity > 1) {
+        // If quantity is more than 1, just decrease the quantity
+        return prev.map(cartItem => 
+          cartItem.item.id === itemId 
+            ? { ...cartItem, quantity: cartItem.quantity - 1 } 
+            : cartItem
+        );
+      } else {
+        // If quantity is 1, remove the item from cart
+        return prev.filter(cartItem => cartItem.item.id !== itemId);
+      }
+    });
+    
+    toast("Removed from cart", {
+      description: "Item removed from your cart.",
+    });
+  };
+  
+  // Handle deleting item completely from cart
+  const handleDeleteFromCart = (itemId: string) => {
+    setCartItems(prev => prev.filter(cartItem => cartItem.item.id !== itemId));
+    
+    toast("Removed from cart", {
+      description: "Item removed from your cart.",
+    });
+  };
+  
   // Calculate total items and price
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   const totalPrice = cartItems.reduce((total, item) => total + (item.item.price * item.quantity), 0);
   
   // Handle proceeding to checkout
   const handleCheckout = () => {
+    const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
+    setOrderId(newOrderId);
+    
     navigate('/checkout', {
       state: {
         cartItems,
         restaurantName: restaurant.name,
-        restaurantId: restaurant.id
+        restaurantId: restaurant.id,
+        orderId: newOrderId
       }
     });
   };
@@ -370,6 +533,9 @@ const RestaurantMenu = () => {
                   </Badge>
                 </div>
                 
+                {/* Order status if there's an active order */}
+                <OrderStatus orderId={orderId} />
+                
                 {cartItems.length > 0 ? (
                   <>
                     <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
@@ -379,7 +545,38 @@ const RestaurantMenu = () => {
                             <span className="font-medium mr-2">{cartItem.quantity}x</span>
                             <span>{cartItem.item.name}</span>
                           </div>
-                          <span>${(cartItem.item.price * cartItem.quantity).toFixed(2)}</span>
+                          <div className="flex items-center gap-2">
+                            <span>${(cartItem.item.price * cartItem.quantity).toFixed(2)}</span>
+                            <div className="flex items-center border rounded-md">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 rounded-none border-r" 
+                                onClick={() => handleRemoveFromCart(cartItem.item.id)}
+                              >
+                                <span className="text-lg font-bold">-</span>
+                              </Button>
+                              <div className="w-8 flex items-center justify-center">
+                                <span className="text-sm">{cartItem.quantity}</span>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 rounded-none border-l" 
+                                onClick={() => handleAddToCart(cartItem.item)}
+                              >
+                                <span className="text-lg font-bold">+</span>
+                              </Button>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleDeleteFromCart(cartItem.item.id)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>

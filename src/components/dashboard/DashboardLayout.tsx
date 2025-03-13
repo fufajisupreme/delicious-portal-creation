@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, UtensilsCrossed, ShoppingBag, LogOut } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, ShoppingBag, LogOut, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -77,6 +77,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 Orders
               </Button>
             </Link>
+
+            <Link to="/">
+              <Button 
+                variant="ghost"
+                className="w-full justify-start"
+              >
+                <Home className="mr-2 h-5 w-5" />
+                Return to Home
+              </Button>
+            </Link>
           </nav>
           
           <div className="p-4 border-t mt-auto">
@@ -110,6 +120,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <Link to="/dashboard/orders">
               <Button size="icon" variant={isActive('/dashboard/orders') ? 'default' : 'ghost'}>
                 <ShoppingBag className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/">
+              <Button size="icon" variant="ghost">
+                <Home className="h-5 w-5" />
               </Button>
             </Link>
           </div>
