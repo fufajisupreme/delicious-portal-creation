@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Clock, MapPin, Search, SlidersHorizontal } from 'lucide-react';
@@ -19,6 +20,15 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { Slider } from '@/components/ui/slider';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { cn } from '@/lib/utils';
@@ -145,6 +155,10 @@ const Restaurants = () => {
   const [ratingFilter, setRatingFilter] = useState([0]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const restaurantsPerPage = 6;
+  
   const cuisines = ['all', ...new Set(restaurants.map(r => r.cuisine.toLowerCase()))];
   
   useEffect(() => {
@@ -174,11 +188,27 @@ const Restaurants = () => {
     }
     
     setFilteredRestaurants(result);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [searchTerm, cuisineFilter, priceFilter, ratingFilter, restaurants]);
   
   useEffect(() => {
     setRestaurants(getAllRestaurants());
   }, []);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredRestaurants.length / restaurantsPerPage);
+  const indexOfLastRestaurant = currentPage * restaurantsPerPage;
+  const indexOfFirstRestaurant = indexOfLastRestaurant - restaurantsPerPage;
+  const currentRestaurants = filteredRestaurants.slice(indexOfFirstRestaurant, indexOfLastRestaurant);
+  
+  // Handle page changes
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -285,59 +315,121 @@ const Restaurants = () => {
                 <p className="text-muted-foreground">Try adjusting your filters or search terms</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRestaurants.map(restaurant => (
-                  <Link to={`/restaurants/${restaurant.id}`} key={restaurant.id}>
-                    <div 
-                      className={cn(
-                        "group relative rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col"
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {currentRestaurants.map(restaurant => (
+                    <Link to={`/restaurants/${restaurant.id}`} key={restaurant.id}>
+                      <div 
+                        className={cn(
+                          "group relative rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col"
+                        )}
+                      >
+                        <div className="relative h-48 overflow-hidden">
+                          <img 
+                            src={restaurant.image} 
+                            alt={restaurant.name} 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+                        
+                        <div className="p-5 flex-grow flex flex-col">
+                          <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">{restaurant.name}</h3>
+                          <p className="text-muted-foreground text-sm mb-2">{restaurant.cuisine}</p>
+                          
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {restaurant.tags.slice(0, 3).map((tag, idx) => (
+                              <span key={idx} className="text-xs px-2 py-1 bg-muted rounded-full">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                          
+                          <p className="text-muted-foreground text-sm line-clamp-2 mb-3">{restaurant.description}</p>
+                          
+                          <div className="mt-auto flex flex-wrap gap-3 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-4 h-4 text-food-yellow fill-food-yellow" />
+                              <span className="font-medium">{restaurant.rating}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 text-food-orange" />
+                              <span>{restaurant.deliveryTime}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4 text-food-blue" />
+                              <span>{restaurant.distance}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <Pagination className="my-8">
+                    <PaginationContent>
+                      {currentPage > 1 && (
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            className="cursor-pointer"
+                          />
+                        </PaginationItem>
                       )}
-                    >
-                      <div className="relative h-48 overflow-hidden">
-                        <img 
-                          src={restaurant.image} 
-                          alt={restaurant.name} 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      </div>
                       
-                      <div className="p-5 flex-grow flex flex-col">
-                        <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">{restaurant.name}</h3>
-                        <p className="text-muted-foreground text-sm mb-2">{restaurant.cuisine}</p>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, and pages around current page
+                        if (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        ) {
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                isActive={page === currentPage}
+                                onClick={() => handlePageChange(page)}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        }
                         
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {restaurant.tags.slice(0, 3).map((tag, idx) => (
-                            <span key={idx} className="text-xs px-2 py-1 bg-muted rounded-full">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                        // Show ellipsis for gaps
+                        if (
+                          (page === 2 && currentPage > 3) ||
+                          (page === totalPages - 1 && currentPage < totalPages - 2)
+                        ) {
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        }
                         
-                        <p className="text-muted-foreground text-sm line-clamp-2 mb-3">{restaurant.description}</p>
-                        
-                        <div className="mt-auto flex flex-wrap gap-3 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-food-yellow fill-food-yellow" />
-                            <span className="font-medium">{restaurant.rating}</span>
-                          </div>
-                          
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4 text-food-orange" />
-                            <span>{restaurant.deliveryTime}</span>
-                          </div>
-                          
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4 text-food-blue" />
-                            <span>{restaurant.distance}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                        return null;
+                      })}
+                      
+                      {currentPage < totalPages && (
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            className="cursor-pointer"
+                          />
+                        </PaginationItem>
+                      )}
+                    </PaginationContent>
+                  </Pagination>
+                )}
+              </>
             )}
           </div>
         </div>

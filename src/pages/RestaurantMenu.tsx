@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ScrollToTop from '@/components/ScrollToTop';
 import { toast } from "sonner";
 
 const getRestaurants = () => {
@@ -330,6 +331,13 @@ const RestaurantMenu = () => {
     localStorage.setItem(`cart-${id}`, JSON.stringify(cartItems));
   }, [cartItems, id]);
   
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'instant'
+    });
+  }, [id]);
+  
   if (!restaurant) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -590,6 +598,7 @@ const RestaurantMenu = () => {
       </main>
       
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };

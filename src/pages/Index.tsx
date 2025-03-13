@@ -42,7 +42,10 @@ const Index = () => {
     document.addEventListener('click', handleAnchorClick);
     
     // Scroll to top when navigating to this page
-    window.scrollTo(0, 0);
+    window.scrollTo({
+      top: 0,
+      behavior: 'instant'
+    });
 
     // If there's a hash in the URL, scroll to that element
     if (hash) {
