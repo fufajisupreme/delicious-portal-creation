@@ -24,6 +24,7 @@ const Navbar = () => {
   const [authDialogView, setAuthDialogView] = useState<'login' | 'signup'>('login');
   const { isAuthenticated, isRestaurantOwner } = useAuth();
   const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,6 +50,15 @@ const Navbar = () => {
     setAuthDialogView('signup');
     setAuthDialogOpen(true);
     setMobileMenuOpen(false);
+  };
+
+  // Helper function to create appropriate links based on current page
+  const getSectionLink = (sectionId: string) => {
+    if (isHomePage) {
+      return `#${sectionId}`;
+    } else {
+      return `/#${sectionId}`;
+    }
   };
 
   return (
@@ -94,7 +104,7 @@ const Navbar = () => {
                           <NavigationMenuLink asChild>
                             <a
                               className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/20 to-primary/40 p-6 no-underline outline-none focus:shadow-md"
-                              href="#categories"
+                              href={getSectionLink("categories")}
                             >
                               <div className="mt-4 mb-2 text-lg font-medium">
                                 Food Categories
@@ -118,7 +128,7 @@ const Navbar = () => {
                         </li>
                         <li>
                           <a
-                            href="#how-it-works"
+                            href={getSectionLink("how-it-works")}
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
                             <div className="text-sm font-medium">How It Works</div>
@@ -129,7 +139,7 @@ const Navbar = () => {
                         </li>
                         <li>
                           <a
-                            href="#testimonials"
+                            href={getSectionLink("testimonials")}
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
                             <div className="text-sm font-medium">Testimonials</div>
@@ -211,7 +221,7 @@ const Navbar = () => {
               Home
             </Link>
             <a 
-              href="#categories" 
+              href={getSectionLink("categories")} 
               className="text-lg font-medium py-2 hover:text-primary transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -225,14 +235,14 @@ const Navbar = () => {
               Restaurants
             </Link>
             <a 
-              href="#how-it-works" 
+              href={getSectionLink("how-it-works")} 
               className="text-lg font-medium py-2 hover:text-primary transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               How It Works
             </a>
             <a 
-              href="#testimonials" 
+              href={getSectionLink("testimonials")} 
               className="text-lg font-medium py-2 hover:text-primary transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >

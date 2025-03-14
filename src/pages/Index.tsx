@@ -8,6 +8,7 @@ import FeaturedRestaurants from '@/components/FeaturedRestaurants';
 import Testimonials from '@/components/Testimonials';
 import DownloadCTA from '@/components/DownloadCTA';
 import Footer from '@/components/Footer';
+import ScrollToTop from '@/components/ScrollToTop';
 import { useLocation } from 'react-router-dom';
 
 const Index = () => {
@@ -72,16 +73,23 @@ const Index = () => {
       
       <main className="flex-grow">
         <HeroSection />
-        <FoodCategories />
-        <HowItWorks />
+        <div id="categories">
+          <FoodCategories />
+        </div>
+        <div id="how-it-works">
+          <HowItWorks />
+        </div>
         <div id="featured-restaurants">
           <FeaturedRestaurants />
         </div>
-        <Testimonials />
+        <div id="testimonials">
+          <Testimonials />
+        </div>
         <DownloadCTA />
       </main>
       
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };
