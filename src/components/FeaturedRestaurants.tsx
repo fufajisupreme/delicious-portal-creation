@@ -50,6 +50,28 @@ const restaurants = [
     featured: false,
     delay: '300',
   },
+  {
+    id: 5,
+    name: 'Spice of India',
+    image: 'https://images.unsplash.com/photo-1585937421612-70a008356475?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Indian • Curry • Naan',
+    rating: 4.5,
+    deliveryTime: '25-40 min',
+    distance: '1.8 mi',
+    featured: true,
+    delay: '400',
+  },
+  {
+    id: 6,
+    name: 'Mediterranean Delight',
+    image: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Mediterranean • Falafel • Hummus',
+    rating: 4.4,
+    deliveryTime: '20-35 min',
+    distance: '1.3 mi',
+    featured: false,
+    delay: '500',
+  },
 ];
 
 const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) => {
@@ -149,8 +171,8 @@ const FeaturedRestaurants = () => {
           </Link>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {restaurants.map((restaurant, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {restaurants.slice(0, 6).map((restaurant, index) => (
             <RestaurantCard key={index} restaurant={restaurant} />
           ))}
         </div>

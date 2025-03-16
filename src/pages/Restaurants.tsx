@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Clock, MapPin, Search, SlidersHorizontal } from 'lucide-react';
@@ -87,12 +86,12 @@ const baseRestaurants = [
     name: 'Spice of India',
     image: 'https://images.unsplash.com/photo-1585937421612-70a008356475?auto=format&fit=crop&q=80&w=400&h=250',
     cuisine: 'Indian',
-    tags: ['Curry', 'Naan', 'Spicy'],
+    tags: ['Curry', 'Naan', 'Tandoori'],
     rating: 4.5,
     deliveryTime: '25-40 min',
     distance: '1.8 mi',
     priceRange: '$$',
-    description: 'Authentic Indian cuisine with bold flavors and spices.',
+    description: 'Authentic Indian cuisine with bold flavors and aromatic spices from all regions of India.',
   },
   {
     id: 6,
@@ -109,7 +108,7 @@ const baseRestaurants = [
   {
     id: 7,
     name: 'Taco Fiesta',
-    image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&q=80&w=400&h=250',
+    image: 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&q=80&w=400&h=250',
     cuisine: 'Mexican',
     tags: ['Tacos', 'Burritos', 'Margaritas'],
     rating: 4.3,
@@ -129,6 +128,90 @@ const baseRestaurants = [
     distance: '1.1 mi',
     priceRange: '$$',
     description: 'Asian fusion restaurant specializing in various noodle dishes.',
+  },
+  {
+    id: 9,
+    name: 'The Pizza Oven',
+    image: 'https://images.unsplash.com/photo-1593504049359-74330189a345?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Italian',
+    tags: ['Pizza', 'Calzone', 'Garlic Bread'],
+    rating: 4.7,
+    deliveryTime: '20-35 min',
+    distance: '1.4 mi',
+    priceRange: '$$',
+    description: 'Authentic wood-fired pizzas made with traditional Italian recipes and fresh ingredients.',
+  },
+  {
+    id: 10,
+    name: 'Green Garden',
+    image: 'https://images.unsplash.com/photo-1551218372-a8789b81b253?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Vegan',
+    tags: ['Plant-based', 'Organic', 'Gluten-Free'],
+    rating: 4.4,
+    deliveryTime: '20-35 min',
+    distance: '1.7 mi',
+    priceRange: '$$$',
+    description: 'Creative plant-based dishes that prove vegan food is anything but boring.',
+  },
+  {
+    id: 11,
+    name: 'Seafood Harbor',
+    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Seafood',
+    tags: ['Fish', 'Lobster', 'Oysters'],
+    rating: 4.8,
+    deliveryTime: '25-40 min',
+    distance: '2.1 mi',
+    priceRange: '$$$$',
+    description: 'The freshest catches of the day prepared with expertise and creativity.',
+  },
+  {
+    id: 12,
+    name: 'Beijing Palace',
+    image: 'https://images.unsplash.com/photo-1503764654157-72d979d9af2f?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Chinese',
+    tags: ['Dim Sum', 'Noodles', 'Peking Duck'],
+    rating: 4.5,
+    deliveryTime: '25-40 min',
+    distance: '1.6 mi',
+    priceRange: '$$',
+    description: 'Traditional Chinese cuisine from various regions, with a focus on authenticity.',
+  },
+  {
+    id: 13,
+    name: 'Thai Spice',
+    image: 'https://images.unsplash.com/photo-1562565652-a0d8f0c59eb4?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Thai',
+    tags: ['Curry', 'Pad Thai', 'Spring Rolls'],
+    rating: 4.6,
+    deliveryTime: '20-35 min',
+    distance: '1.2 mi',
+    priceRange: '$$',
+    description: 'Bold and aromatic Thai dishes with the perfect balance of sweet, sour, and spicy flavors.',
+  },
+  {
+    id: 14,
+    name: 'Steakhouse Prime',
+    image: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'American',
+    tags: ['Steak', 'Ribs', 'Wine'],
+    rating: 4.9,
+    deliveryTime: '30-45 min',
+    distance: '2.4 mi',
+    priceRange: '$$$$',
+    description: 'Premium aged steaks and fine wines in an elegant atmosphere.',
+  },
+  {
+    id: 15,
+    name: 'Seoul Kitchen',
+    image: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Korean',
+    tags: ['BBQ', 'Bibimbap', 'Kimchi'],
+    rating: 4.7,
+    deliveryTime: '25-40 min',
+    distance: '1.9 mi',
+    priceRange: '$$$',
+    description: 'Authentic Korean BBQ and traditional dishes full of umami and fermented flavors.',
   },
 ];
 
@@ -155,7 +238,6 @@ const Restaurants = () => {
   const [ratingFilter, setRatingFilter] = useState([0]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const restaurantsPerPage = 6;
   
@@ -188,20 +270,18 @@ const Restaurants = () => {
     }
     
     setFilteredRestaurants(result);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [searchTerm, cuisineFilter, priceFilter, ratingFilter, restaurants]);
   
   useEffect(() => {
     setRestaurants(getAllRestaurants());
   }, []);
   
-  // Calculate pagination
   const totalPages = Math.ceil(filteredRestaurants.length / restaurantsPerPage);
   const indexOfLastRestaurant = currentPage * restaurantsPerPage;
   const indexOfFirstRestaurant = indexOfLastRestaurant - restaurantsPerPage;
   const currentRestaurants = filteredRestaurants.slice(indexOfFirstRestaurant, indexOfLastRestaurant);
   
-  // Handle page changes
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
     window.scrollTo({
@@ -370,74 +450,5 @@ const Restaurants = () => {
                   ))}
                 </div>
                 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <Pagination className="my-8">
-                    <PaginationContent>
-                      {currentPage > 1 && (
-                        <PaginationItem>
-                          <PaginationPrevious 
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            className="cursor-pointer"
-                          />
-                        </PaginationItem>
-                      )}
-                      
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                        // Show first page, last page, and pages around current page
-                        if (
-                          page === 1 ||
-                          page === totalPages ||
-                          (page >= currentPage - 1 && page <= currentPage + 1)
-                        ) {
-                          return (
-                            <PaginationItem key={page}>
-                              <PaginationLink
-                                isActive={page === currentPage}
-                                onClick={() => handlePageChange(page)}
-                                className="cursor-pointer"
-                              >
-                                {page}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        }
-                        
-                        // Show ellipsis for gaps
-                        if (
-                          (page === 2 && currentPage > 3) ||
-                          (page === totalPages - 1 && currentPage < totalPages - 2)
-                        ) {
-                          return (
-                            <PaginationItem key={page}>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          );
-                        }
-                        
-                        return null;
-                      })}
-                      
-                      {currentPage < totalPages && (
-                        <PaginationItem>
-                          <PaginationNext 
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            className="cursor-pointer"
-                          />
-                        </PaginationItem>
-                      )}
-                    </PaginationContent>
-                  </Pagination>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </main>
-      
-      <Footer />
-    </div>
-  );
-};
+                {
 
-export default Restaurants;
