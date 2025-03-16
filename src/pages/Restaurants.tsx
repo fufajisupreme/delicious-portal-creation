@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Clock, MapPin, Search, SlidersHorizontal } from 'lucide-react';
@@ -87,12 +86,12 @@ const baseRestaurants = [
     name: 'Spice of India',
     image: 'https://images.unsplash.com/photo-1585937421612-70a008356475?auto=format&fit=crop&q=80&w=400&h=250',
     cuisine: 'Indian',
-    tags: ['Curry', 'Naan', 'Tandoori'],
-    rating: 4.5,
+    tags: ['Curry', 'Naan', 'Tandoori', 'Biryani'],
+    rating: 4.7,
     deliveryTime: '25-40 min',
     distance: '1.8 mi',
     priceRange: '$$',
-    description: 'Authentic Indian cuisine with bold flavors and aromatic spices from all regions of India.',
+    description: 'Authentic Indian cuisine with bold flavors and aromatic spices from all regions of India. Specializing in both North and South Indian delicacies.',
   },
   {
     id: 6,
@@ -461,7 +460,6 @@ const Restaurants = () => {
                       )}
                       
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                        // Show first page, last page, current page, and pages adjacent to current
                         if (
                           page === 1 ||
                           page === totalPages ||
@@ -479,7 +477,6 @@ const Restaurants = () => {
                           );
                         }
                         
-                        // Show ellipsis for gaps
                         if (page === 2 || page === totalPages - 1) {
                           return (
                             <PaginationItem key={page}>

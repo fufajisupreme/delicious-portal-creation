@@ -72,6 +72,28 @@ const restaurants = [
     featured: false,
     delay: '500',
   },
+  {
+    id: 7,
+    name: 'Taco Fiesta',
+    image: 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Mexican • Tacos • Burritos',
+    rating: 4.3,
+    deliveryTime: '15-30 min',
+    distance: '0.9 mi',
+    featured: true,
+    delay: '600',
+  },
+  {
+    id: 8,
+    name: 'Noodle House',
+    image: 'https://images.unsplash.com/photo-1556040220-4096d522378d?auto=format&fit=crop&q=80&w=400&h=250',
+    cuisine: 'Asian • Ramen • Pho',
+    rating: 4.6,
+    deliveryTime: '20-35 min',
+    distance: '1.1 mi',
+    featured: false,
+    delay: '700',
+  },
 ];
 
 const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) => {
