@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Clock, MapPin, Search, SlidersHorizontal } from 'lucide-react';
@@ -450,5 +451,63 @@ const Restaurants = () => {
                   ))}
                 </div>
                 
-                {
+                {totalPages > 1 && (
+                  <Pagination className="mt-10 justify-center">
+                    <PaginationContent>
+                      {currentPage > 1 && (
+                        <PaginationItem>
+                          <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} />
+                        </PaginationItem>
+                      )}
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages adjacent to current
+                        if (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        ) {
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                isActive={page === currentPage}
+                                onClick={() => handlePageChange(page)}
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        }
+                        
+                        // Show ellipsis for gaps
+                        if (page === 2 || page === totalPages - 1) {
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        }
+                        
+                        return null;
+                      })}
+                      
+                      {currentPage < totalPages && (
+                        <PaginationItem>
+                          <PaginationNext onClick={() => handlePageChange(currentPage + 1)} />
+                        </PaginationItem>
+                      )}
+                    </PaginationContent>
+                  </Pagination>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  );
+};
 
+export default Restaurants;
