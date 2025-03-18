@@ -1,9 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UtensilsCrossed, ShoppingBag, DollarSign, Users } from 'lucide-react';
+import { UtensilsCrossed, ShoppingBag, DollarSign, Users, Clock, Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+
+// Define order status type
+type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+
+// Define order interface
+interface Order {
+  id: string;
+  customer: string;
+  date: string;
+  items: Array<{ name: string; quantity: number; price: number }>;
+  total: number;
+  status: OrderStatus;
+}
 
 const Dashboard: React.FC = () => {
   // Mock data - would be fetched from API in real app
@@ -12,6 +28,117 @@ const Dashboard: React.FC = () => {
     pendingOrders: 8,
     totalRevenue: 4582.50,
     customers: 96
+  };
+
+  // Mock recent orders with real-looking data
+  const [recentOrders, setRecentOrders] = useState<Order[]>([
+    {
+      id: 'ORD-1001',
+      customer: 'John Doe',
+      date: new Date(Date.now() - 35 * 60000).toISOString(), // 35 minutes ago
+      items: [
+        { name: 'Margherita Pizza', quantity: 2, price: 12.99 },
+        { name: 'Garlic Breadsticks', quantity: 1, price: 4.99 }
+      ],
+      total: 30.97,
+      status: 'pending'
+    },
+    {
+      id: 'ORD-1002',
+      customer: 'Jane Smith',
+      date: new Date(Date.now() - 65 * 60000).toISOString(), // 65 minutes ago
+      items: [
+        { name: 'Chicken Alfredo', quantity: 1, price: 14.99 },
+        { name: 'Caesar Salad', quantity: 1, price: 8.99 }
+      ],
+      total: 23.98,
+      status: 'preparing'
+    },
+    {
+      id: 'ORD-1003',
+      customer: 'Robert Johnson',
+      date: new Date(Date.now() - 120 * 60000).toISOString(), // 2 hours ago
+      items: [
+        { name: 'Pepperoni Pizza', quantity: 1, price: 13.99 },
+        { name: 'Buffalo Wings', quantity: 1, price: 9.99 }
+      ],
+      total: 23.98,
+      status: 'ready'
+    },
+    {
+      id: 'ORD-1004',
+      customer: 'Emily Williams',
+      date: new Date(Date.now() - 180 * 60000).toISOString(), // 3 hours ago
+      items: [
+        { name: 'Vegetarian Pizza', quantity: 1, price: 13.99 }
+      ],
+      total: 13.99,
+      status: 'completed'
+    },
+    {
+      id: 'ORD-1005',
+      customer: 'Michael Brown', 
+      date: new Date(Date.now() - 240 * 60000).toISOString(), // 4 hours ago
+      items: [
+        { name: 'Supreme Pizza', quantity: 1, price: 15.99 }
+      ],
+      total: 15.99,
+      status: 'cancelled'
+    }
+  ]);
+
+  // Function to update order status
+  const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
+    setRecentOrders(orders => 
+      orders.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+    
+    // Show notification
+    toast.success(`Order ${orderId} status updated to ${newStatus}`);
+  };
+
+  // Function to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString();
+  };
+
+  // Function to get status badge
+  const getStatusBadge = (status: OrderStatus) => {
+    switch (status) {
+      case 'pending':
+        return <Badge className="bg-yellow-500">Pending</Badge>;
+      case 'preparing':
+        return <Badge className="bg-blue-500">Preparing</Badge>;
+      case 'ready':
+        return <Badge className="bg-purple-500">Ready</Badge>;
+      case 'completed':
+        return <Badge className="bg-green-500">Completed</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500">Cancelled</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  // Function to get status icon
+  const getStatusIcon = (status: OrderStatus) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'preparing':
+        return <UtensilsCrossed className="h-4 w-4 text-blue-500" />;
+      case 'ready':
+        return <ShoppingBag className="h-4 w-4 text-purple-500" />;
+      case 'completed':
+        return <Check className="h-4 w-4 text-green-500" />;
+      case 'cancelled':
+        return <X className="h-4 w-4 text-red-500" />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -81,7 +208,7 @@ const Dashboard: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
-            <CardDescription>Overview of the latest 5 orders</CardDescription>
+            <CardDescription>Overview of the latest orders</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
@@ -92,22 +219,62 @@ const Dashboard: React.FC = () => {
                     <th className="h-10 px-4 text-left font-medium">Customer</th>
                     <th className="h-10 px-4 text-left font-medium">Date</th>
                     <th className="h-10 px-4 text-right font-medium">Amount</th>
-                    <th className="h-10 px-4 text-right font-medium">Status</th>
+                    <th className="h-10 px-4 text-center font-medium">Status</th>
+                    <th className="h-10 px-4 text-right font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...Array(5)].map((_, i) => (
-                    <tr key={i} className="border-b">
-                      <td className="p-4 align-middle">ORD-{1000 + i}</td>
-                      <td className="p-4 align-middle">Customer {i + 1}</td>
-                      <td className="p-4 align-middle">{new Date().toLocaleDateString()}</td>
-                      <td className="p-4 text-right align-middle">${(20 + i * 5).toFixed(2)}</td>
+                  {recentOrders.map((order) => (
+                    <tr key={order.id} className="border-b">
+                      <td className="p-4 align-middle">{order.id}</td>
+                      <td className="p-4 align-middle">{order.customer}</td>
+                      <td className="p-4 align-middle">{formatDate(order.date)}</td>
+                      <td className="p-4 text-right align-middle">${order.total.toFixed(2)}</td>
+                      <td className="p-4 text-center align-middle">
+                        <div className="flex items-center justify-center gap-2">
+                          {getStatusIcon(order.status)}
+                          {getStatusBadge(order.status)}
+                        </div>
+                      </td>
                       <td className="p-4 text-right align-middle">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          i === 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-                        }`}>
-                          {i === 0 ? 'Pending' : 'Completed'}
-                        </span>
+                        {(order.status === 'pending' || order.status === 'preparing' || order.status === 'ready') && (
+                          <div className="flex justify-end gap-2">
+                            {order.status === 'pending' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => updateOrderStatus(order.id, 'preparing')}
+                                className="bg-blue-500 hover:bg-blue-600"
+                              >
+                                Prepare
+                              </Button>
+                            )}
+                            {order.status === 'preparing' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => updateOrderStatus(order.id, 'ready')}
+                                className="bg-purple-500 hover:bg-purple-600"
+                              >
+                                Ready
+                              </Button>
+                            )}
+                            {order.status === 'ready' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => updateOrderStatus(order.id, 'completed')}
+                                className="bg-green-500 hover:bg-green-600"
+                              >
+                                Complete
+                              </Button>
+                            )}
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
