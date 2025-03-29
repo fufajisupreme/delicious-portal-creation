@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth, UserRole } from '@/contexts/AuthContext';
+import FaceScanner from './FaceScanner';
+import { Camera } from 'lucide-react';
+import { toast } from "sonner";
 
 interface SignupFormProps {
   onToggleForm: () => void;
@@ -17,19 +20,37 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('customer');
   const [isLoading, setIsLoading] = useState(false);
+  const [showFaceScanner, setShowFaceScanner] = useState(false);
+  const [faceImageData, setFaceImageData] = useState<string | null>(null);
   const { signup } = useAuth();
+
+  const handleFaceCapture = (imageData: string) => {
+    setFaceImageData(imageData);
+    setShowFaceScanner(false);
+    toast.success("Face captured successfully!");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const success = await signup(name, email, password, role);
+      // Pass face image data to signup function
+      const success = await signup(name, email, password, role, faceImageData);
       if (success && onSuccess) onSuccess();
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (showFaceScanner) {
+    return (
+      <FaceScanner
+        onCapture={handleFaceCapture}
+        onCancel={() => setShowFaceScanner(false)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6 w-full">
@@ -89,6 +110,37 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
               <Label htmlFor="restaurant_owner" className="cursor-pointer">Restaurant Owner</Label>
             </div>
           </RadioGroup>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Face Authentication</Label>
+          <div className="flex flex-col space-y-2">
+            {faceImageData ? (
+              <div className="border rounded-md p-3 flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Face scan captured</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowFaceScanner(true)}
+                >
+                  Rescan
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                type="button"
+                variant="outline" 
+                onClick={() => setShowFaceScanner(true)}
+                className="flex items-center"
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                Scan Face
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Face scanning provides an additional layer of security for your account.
+            </p>
+          </div>
         </div>
         
         <Button type="submit" className="w-full" disabled={isLoading}>
