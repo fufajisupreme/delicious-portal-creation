@@ -1,107 +1,69 @@
 
 // Custom 2D face scan authentication service
-// This implementation uses a simulated face recognition model
-// In a real application, you would connect to a backend API or use a browser-based ML model
-
-import * as faceapi from '@tensorflow-models/face-landmarks-detection';
+// This implementation uses API calls to a Python face recognition model
 
 /**
- * Face detection model singleton
- * Loads the model once and reuses it for subsequent requests
+ * Base URL for the face recognition API
+ * In a real application, this would be your deployed API endpoint
  */
-let faceModel: any = null;
+const API_BASE_URL = 'https://api.example.com/face-recognition'; // Replace with your actual API URL
 
 /**
- * Initialize and load the face detection model
- * @returns Promise resolving when the model is loaded
+ * Interface for face detection position data
  */
-const loadFaceModel = async (): Promise<void> => {
-  if (faceModel) return;
-  
-  try {
-    console.log('Loading face detection model...');
-    // Load the face landmarks detection model
-    faceModel = await faceapi.load(
-      faceapi.SupportedPackages.mediapipeFacemesh,
-      { maxFaces: 1 }
-    );
-    console.log('Face detection model loaded successfully');
-  } catch (error) {
-    console.error('Error loading face detection model:', error);
-    throw new Error('Failed to load face detection model');
-  }
-};
+interface FacePosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 /**
- * Extract face features from an image
+ * Extract face features from an image by calling the API
  * @param imageData - Base64 encoded image data
  * @returns Promise resolving to face features
  */
-const extractFaceFeatures = async (imageData: string): Promise<any> => {
-  if (!faceModel) await loadFaceModel();
-  
+const sendImageToAPI = async (
+  endpoint: string,
+  imageData: string,
+  userId?: string
+): Promise<any> => {
   try {
-    // Create an image element from the base64 data
-    const img = new Image();
-    return new Promise((resolve, reject) => {
-      img.onload = async () => {
-        try {
-          // Create a canvas to draw the image
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Could not get canvas context'));
-            return;
-          }
-          
-          // Draw the image to the canvas
-          ctx.drawImage(img, 0, 0);
-          
-          // Get image data from canvas
-          const imageElement = document.createElement('img');
-          imageElement.src = canvas.toDataURL();
-          
-          // Detect face landmarks
-          const predictions = await faceModel.estimateFaces(imageElement);
-          
-          if (predictions.length === 0) {
-            reject(new Error('No face detected in the image'));
-            return;
-          }
-          
-          // Return the first face's landmarks
-          resolve(predictions[0]);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      
-      img.onerror = () => {
-        reject(new Error('Failed to load image'));
-      };
-      
-      // Set image source to base64 data
-      img.src = imageData;
+    // Remove data URL prefix if present to reduce payload size
+    const base64Image = imageData.includes('base64,')
+      ? imageData.split('base64,')[1]
+      : imageData;
+    
+    // Prepare the request body
+    const requestBody: any = {
+      image: base64Image
+    };
+    
+    // Add userId if provided
+    if (userId) {
+      requestBody.userId = userId;
+    }
+    
+    // Call the API
+    const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
     });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `API error: ${response.status}`);
+    }
+    
+    return await response.json();
   } catch (error) {
-    console.error('Error extracting face features:', error);
-    throw new Error('Failed to extract face features');
+    console.error(`Error calling ${endpoint} API:`, error);
+    throw error;
   }
-};
-
-/**
- * Face similarity comparison
- * Compares two sets of face features to determine if they are the same person
- * @param features1 - First set of face features
- * @param features2 - Second set of face features
- * @returns Similarity score between 0 and 1
- */
-const compareFaceFeatures = (features1: any, features2: any): number => {
-  // In a real implementation, this would calculate the distance between face embeddings
-  // For demonstration, we're returning a simulated similarity score
-  return 0.85 + Math.random() * 0.15; // Simulated high match score
 };
 
 /**
@@ -126,15 +88,6 @@ export const verifyFace = async (
   });
   
   try {
-    // Wait a bit to simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Load face model if not already loaded
-    await loadFaceModel();
-    
-    // Extract features from the provided image
-    const features = await extractFaceFeatures(faceImageData);
-    
     // If no userId provided, we can't verify against stored data
     if (!userId) {
       return {
@@ -143,31 +96,18 @@ export const verifyFace = async (
       };
     }
     
-    // Check if we have stored features for this user
-    if (!faceFeatureDatabase[userId]) {
-      return {
-        success: false,
-        message: 'No face data found for this user'
-      };
-    }
+    // Simulate API delay for demo purposes
+    // (you can remove this in a real implementation)
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Compare the features with stored features
-    const similarity = compareFaceFeatures(features, faceFeatureDatabase[userId]);
-    const threshold = 0.75; // Minimum similarity threshold
+    // Call the verification API endpoint
+    const result = await sendImageToAPI('verify', faceImageData, userId);
     
-    if (similarity >= threshold) {
-      return {
-        success: true,
-        message: 'Face verification successful',
-        confidence: Math.round(similarity * 100) / 100
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Face verification failed',
-        confidence: Math.round(similarity * 100) / 100
-      };
-    }
+    return {
+      success: result.verified,
+      message: result.verified ? 'Face verification successful' : 'Face verification failed',
+      confidence: result.confidence
+    };
   } catch (error) {
     console.error('Error during face verification:', error);
     return {
@@ -193,21 +133,21 @@ export const registerFace = async (
   });
   
   try {
-    // Wait a bit to simulate processing time
+    // Simulate API delay for demo purposes
+    // (you can remove this in a real implementation)
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Load face model if not already loaded
-    await loadFaceModel();
+    // Call the registration API endpoint
+    const result = await sendImageToAPI('register', faceImageData, userId);
     
-    // Extract features from the provided image
-    const features = await extractFaceFeatures(faceImageData);
-    
-    // Store the features in our simulated database
-    faceFeatureDatabase[userId] = features;
+    // Store success in our simulated database
+    if (result.registered) {
+      faceFeatureDatabase[userId] = true;
+    }
     
     return {
-      success: true,
-      message: 'Face registered successfully'
+      success: result.registered,
+      message: result.registered ? 'Face registered successfully' : 'Face registration failed'
     };
   } catch (error) {
     console.error('Error during face registration:', error);
@@ -230,28 +170,31 @@ export const detectFace = async (
   detected: boolean; 
   message: string; 
   faceData?: { 
-    position: { x: number; y: number; width: number; height: number };
+    position: FacePosition;
     confidence: number;
   } 
 }> => {
   try {
-    // Load face model if not already loaded
-    await loadFaceModel();
+    // For demo purposes, add a small delay to simulate API call
+    // (you can remove this in a real implementation)
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Extract features to see if a face is detected
-    const features = await extractFaceFeatures(imageData);
+    // Call the detection API endpoint
+    const result = await sendImageToAPI('detect', imageData);
+    
+    if (!result.detected) {
+      return {
+        detected: false,
+        message: 'No face detected in the image'
+      };
+    }
     
     return {
       detected: true,
       message: 'Face detected successfully',
       faceData: {
-        position: {
-          x: features.boundingBox?.topLeft[0] || 0,
-          y: features.boundingBox?.topLeft[1] || 0,
-          width: features.boundingBox?.bottomRight[0] - features.boundingBox?.topLeft[0] || 0,
-          height: features.boundingBox?.bottomRight[1] - features.boundingBox?.topLeft[1] || 0
-        },
-        confidence: features.faceInViewConfidence || 0.95
+        position: result.position,
+        confidence: result.confidence
       }
     };
   } catch (error) {

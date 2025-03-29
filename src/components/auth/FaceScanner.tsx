@@ -81,7 +81,7 @@ const FaceScanner: React.FC<FaceScannerProps> = ({ onCapture, onCancel }) => {
         // Get image data as base64 string
         const imageData = canvas.toDataURL('image/png');
         
-        // Check if a face is detected
+        // Check if a face is detected using our API service
         const result = await detectFace(imageData);
         setFaceDetected(result.detected);
         
