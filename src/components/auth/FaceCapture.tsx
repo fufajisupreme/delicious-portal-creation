@@ -177,7 +177,7 @@ const FaceCapture: React.FC<FaceCaptureProps> = ({
               onChange={handleFileUpload}
             />
             <label htmlFor="face-upload">
-              <Button variant="outline" className="flex items-center cursor-pointer" as="span">
+              <Button variant="outline" className="flex items-center cursor-pointer">
                 <Upload className="mr-2 h-4 w-4" />
                 Upload Image
               </Button>
