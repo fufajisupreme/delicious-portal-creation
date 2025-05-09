@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth, UserRole } from '@/contexts/AuthContext';
-import FaceAuthCapture from './FaceAuthCapture';
+import FaceScanner from './FaceScanner';
 import { Camera } from 'lucide-react';
 import { toast } from "sonner";
 
@@ -20,13 +20,13 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('customer');
   const [isLoading, setIsLoading] = useState(false);
-  const [showFaceAuthCapture, setShowFaceAuthCapture] = useState(false);
+  const [showFaceScanner, setShowFaceScanner] = useState(false);
   const [faceImageData, setFaceImageData] = useState<string | null>(null);
   const { signup } = useAuth();
 
   const handleFaceCapture = (imageData: string) => {
     setFaceImageData(imageData);
-    setShowFaceAuthCapture(false);
+    setShowFaceScanner(false);
     toast.success("Face captured successfully!");
   };
 
@@ -43,11 +43,11 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
     }
   };
 
-  if (showFaceAuthCapture) {
+  if (showFaceScanner) {
     return (
-      <FaceAuthCapture
+      <FaceScanner
         onCapture={handleFaceCapture}
-        onCancel={() => setShowFaceAuthCapture(false)}
+        onCancel={() => setShowFaceScanner(false)}
       />
     );
   }
@@ -121,24 +121,24 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setShowFaceAuthCapture(true)}
+                  onClick={() => setShowFaceScanner(true)}
                 >
-                  Recapture
+                  Rescan
                 </Button>
               </div>
             ) : (
               <Button 
                 type="button"
                 variant="outline" 
-                onClick={() => setShowFaceAuthCapture(true)}
+                onClick={() => setShowFaceScanner(true)}
                 className="flex items-center"
               >
                 <Camera className="mr-2 h-4 w-4" />
-                Set Up Face Authentication
+                Scan Face
               </Button>
             )}
             <p className="text-xs text-muted-foreground">
-              Face authentication provides an additional layer of security for your account.
+              Face scanning provides an additional layer of security for your account.
             </p>
           </div>
         </div>
