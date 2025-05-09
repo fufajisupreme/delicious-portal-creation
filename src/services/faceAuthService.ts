@@ -2,6 +2,7 @@
 // Face authentication service that communicates with our Node.js backend
 
 const API_URL = "http://localhost:3001"; // Node.js/Express backend URL
+const FASTAPI_URL = "http://localhost:8000"; // FastAPI server for face recognition
 
 /**
  * Register a face for a user during signup

@@ -18,7 +18,7 @@ const fs = require('fs');
 
 const app = express();
 const port = 3001;
-const FLASK_API = 'http://localhost:5000'; // Python Flask server
+const FASTAPI_URL = 'http://localhost:8000'; // FastAPI server for face recognition
 const JWT_SECRET = 'your-jwt-secret'; // Should be in environment variables
 
 // Middleware
@@ -86,20 +86,20 @@ app.post('/auth/signup', upload.single('faceImage'), async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Send face image to Flask API for embedding
+    // Send face image to FastAPI for embedding
     const formData = new FormData();
     formData.append('image', fs.createReadStream(req.file.path));
     
-    const flaskResponse = await axios.post(`${FLASK_API}/register`, formData, {
+    const fastApiResponse = await axios.post(`${FASTAPI_URL}/register`, formData, {
       headers: {
         ...formData.getHeaders(),
       }
     });
     
-    if (!flaskResponse.data.success) {
+    if (!fastApiResponse.data.success) {
       return res.status(400).json({
         success: false,
-        message: 'Face registration failed: ' + flaskResponse.data.message
+        message: 'Face registration failed: ' + fastApiResponse.data.message
       });
     }
     
@@ -109,7 +109,7 @@ app.post('/auth/signup', upload.single('faceImage'), async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      faceId: flaskResponse.data.embedding_id
+      faceId: fastApiResponse.data.embedding_id
     });
     
     await newUser.save();
@@ -167,7 +167,7 @@ app.post('/auth/login', upload.single('faceImage'), async (req, res) => {
       formData.append('image', fs.createReadStream(req.file.path));
       formData.append('user_id', user.faceId);
       
-      const flaskResponse = await axios.post(`${FLASK_API}/verify`, formData, {
+      const fastApiResponse = await axios.post(`${FASTAPI_URL}/verify`, formData, {
         headers: {
           ...formData.getHeaders(),
         }
@@ -176,7 +176,7 @@ app.post('/auth/login', upload.single('faceImage'), async (req, res) => {
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
       
-      if (!flaskResponse.data.success) {
+      if (!fastApiResponse.data.success) {
         return res.status(401).json({
           success: false,
           message: 'Face verification failed'
