@@ -1,4 +1,3 @@
-
 /**
  * Express server for face authentication
  * 
@@ -279,6 +278,50 @@ app.get('/user/profile', verifyToken, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Server error' 
+    });
+  }
+});
+
+// Chat API endpoint
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Message is required' 
+      });
+    }
+    
+    // Simple AI response logic (placeholder)
+    // In a real app, you would integrate with an AI service like OpenAI, Azure, etc.
+    let response = '';
+    
+    if (message.toLowerCase().includes('food')) {
+      response = "Our app offers a wide variety of food options from top-rated restaurants in your area. You can filter by cuisine, price range, or dietary preferences!";
+    } else if (message.toLowerCase().includes('delivery')) {
+      response = "We deliver to most locations within 20-30 minutes. You can track your delivery in real-time through our app!";
+    } else if (message.toLowerCase().includes('restaurant')) {
+      response = "We partner with hundreds of restaurants in your area. From local favorites to well-known chains, we've got you covered!";
+    } else if (message.toLowerCase().includes('payment')) {
+      response = "We accept all major credit cards, digital wallets like Apple Pay and Google Pay, and even cash on delivery in some areas.";
+    } else {
+      response = "Thanks for reaching out! Feel free to ask about our food options, delivery times, restaurant partners, or anything else you'd like to know about our service.";
+    }
+    
+    // Simulate a delay to make it feel more natural
+    setTimeout(() => {
+      res.status(200).json({
+        success: true,
+        response
+      });
+    }, 500);
+  } catch (error) {
+    console.error('Error in chat API:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error processing your request' 
     });
   }
 });

@@ -9,6 +9,7 @@ import Testimonials from '@/components/Testimonials';
 import DownloadCTA from '@/components/DownloadCTA';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
+import Chatbot from '@/components/Chatbot';
 import { useLocation } from 'react-router-dom';
 
 const Index = () => {
@@ -90,6 +91,7 @@ const Index = () => {
       
       <Footer />
       <ScrollToTop />
+      <Chatbot />
     </div>
   );
 };
