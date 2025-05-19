@@ -5,9 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/AuthContext';
 import { Camera } from 'lucide-react';
-import FaceCapture from './FaceCapture';
+import FaceScanner from './FaceScanner';
 import { toast } from "sonner";
-import { verifyFace } from '@/services/faceAuthService';
 
 interface LoginFormProps {
   onToggleForm: () => void;
@@ -19,83 +18,43 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm, onSuccess }) => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showFaceScanner, setShowFaceScanner] = useState(false);
-  const [faceImageFile, setFaceImageFile] = useState<File | null>(null);
-  const [faceImagePreview, setFaceImagePreview] = useState<string | null>(null);
-  const [isFaceLogin, setIsFaceLogin] = useState(false);
-  const { login } = useAuth();
+  const [faceImageData, setFaceImageData] = useState<string | null>(null);
+  const { login, loginWithFace } = useAuth();
 
-  const handleFaceCapture = async (imageFile: File) => {
-    setFaceImageFile(imageFile);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setFaceImagePreview(e.target.result as string);
-      }
-    };
-    reader.readAsDataURL(imageFile);
-    
+  const handleFaceCapture = async (imageData: string) => {
+    setFaceImageData(imageData);
     setShowFaceScanner(false);
     toast.success("Face captured successfully!");
     
     // If we have email, we can try to log in with face immediately
-    if (email && isFaceLogin) {
-      await handleFaceLogin();
+    if (email) {
+      await handleFaceLogin(imageData);
     }
   };
 
-  const handleFaceLogin = async () => {
+  const handleFaceLogin = async (imageData: string = faceImageData || '') => {
     if (!email) {
       toast.error("Please enter your email first");
       return;
     }
     
-    if (!faceImageFile) {
-      setShowFaceScanner(true);
-      setIsFaceLogin(true);
-      return;
-    }
-    
     setIsLoading(true);
-    
     try {
-      // Call the face verification service
-      const result = await verifyFace(email, null, faceImageFile);
-      
-      if (result.success && result.token && result.user) {
-        // Use the auth context to log the user in
-        const success = await login(email, '', result.token, result.user);
-        if (success && onSuccess) onSuccess();
-      } else {
-        toast.error(result.message || "Face verification failed");
-      }
-    } catch (error) {
-      console.error("Face login error:", error);
-      toast.error("An error occurred during face login");
+      const success = await loginWithFace(email, imageData);
+      if (success && onSuccess) onSuccess();
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePasswordLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Call the verification service with password (and face if provided)
-      const result = await verifyFace(email, password, faceImageFile);
-      
-      if (result.success && result.token && result.user) {
-        // Use the auth context to log the user in
-        const success = await login(email, password, result.token, result.user);
-        if (success && onSuccess) onSuccess();
-      } else {
-        toast.error(result.message || "Login failed");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error("An error occurred during login");
+      // If we have face data, try to use it with regular login
+      const success = await login(email, password, faceImageData);
+      if (success && onSuccess) onSuccess();
     } finally {
       setIsLoading(false);
     }
@@ -103,13 +62,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm, onSuccess }) => {
 
   if (showFaceScanner) {
     return (
-      <FaceCapture
+      <FaceScanner
         onCapture={handleFaceCapture}
-        onCancel={() => {
-          setShowFaceScanner(false);
-          setIsFaceLogin(false);
-        }}
-        capturedImage={faceImagePreview}
+        onCancel={() => setShowFaceScanner(false)}
       />
     );
   }
@@ -121,7 +76,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm, onSuccess }) => {
         <p className="text-sm text-muted-foreground">Enter your credentials to log in to your account</p>
       </div>
       
-      <form onSubmit={handlePasswordLogin} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input 
@@ -153,7 +108,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm, onSuccess }) => {
         <div className="space-y-2">
           <Label>Face Authentication</Label>
           <div className="flex flex-col space-y-2">
-            {faceImagePreview ? (
+            {faceImageData ? (
               <div className="border rounded-md p-3 flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Face scan captured</span>
                 <Button 
@@ -168,14 +123,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm, onSuccess }) => {
               <Button 
                 type="button"
                 variant="outline" 
-                onClick={() => {
-                  setShowFaceScanner(true);
-                  setIsFaceLogin(false);
-                }}
+                onClick={() => setShowFaceScanner(true)}
                 className="flex items-center justify-center w-full"
               >
                 <Camera className="mr-2 h-4 w-4" />
-                Add Face Verification
+                Log in with Face
               </Button>
             )}
           </div>
@@ -185,15 +137,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm, onSuccess }) => {
           {isLoading ? 'Logging in...' : 'Log in with Password'}
         </Button>
 
-        <Button 
-          type="button"
-          className="w-full" 
-          variant="secondary"
-          disabled={isLoading}
-          onClick={handleFaceLogin}
-        >
-          {isLoading ? 'Logging in...' : 'Log in with Face Only'}
-        </Button>
+        {faceImageData && (
+          <Button 
+            type="button"
+            className="w-full" 
+            variant="secondary"
+            disabled={isLoading}
+            onClick={() => handleFaceLogin()}
+          >
+            {isLoading ? 'Logging in...' : 'Log in with Face Only'}
+          </Button>
+        )}
       </form>
       
       <div className="text-center text-sm">

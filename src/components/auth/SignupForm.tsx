@@ -5,10 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth, UserRole } from '@/contexts/AuthContext';
-import FaceCapture from './FaceCapture';
+import FaceScanner from './FaceScanner';
 import { Camera } from 'lucide-react';
 import { toast } from "sonner";
-import { registerFace, base64ToFile } from '@/services/faceAuthService';
 
 interface SignupFormProps {
   onToggleForm: () => void;
@@ -22,22 +21,11 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
   const [role, setRole] = useState<UserRole>('customer');
   const [isLoading, setIsLoading] = useState(false);
   const [showFaceScanner, setShowFaceScanner] = useState(false);
-  const [faceImageFile, setFaceImageFile] = useState<File | null>(null);
-  const [faceImagePreview, setFaceImagePreview] = useState<string | null>(null);
+  const [faceImageData, setFaceImageData] = useState<string | null>(null);
   const { signup } = useAuth();
 
-  const handleFaceCapture = (imageFile: File) => {
-    setFaceImageFile(imageFile);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setFaceImagePreview(e.target.result as string);
-      }
-    };
-    reader.readAsDataURL(imageFile);
-    
+  const handleFaceCapture = (imageData: string) => {
+    setFaceImageData(imageData);
     setShowFaceScanner(false);
     toast.success("Face captured successfully!");
   };
@@ -47,22 +35,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
     setIsLoading(true);
 
     try {
-      // Use the faceAuthService to register
-      const result = await registerFace(
-        { name, email, password, role },
-        faceImageFile
-      );
-
-      if (result.success) {
-        // Use Auth context to set the user state
-        const success = await signup(name, email, password, role, result.token, result.userId);
-        if (success && onSuccess) onSuccess();
-      } else {
-        toast.error(result.message || "Registration failed");
-      }
-    } catch (error) {
-      console.error("Signup error:", error);
-      toast.error("An error occurred during signup");
+      // Pass face image data to signup function
+      const success = await signup(name, email, password, role, faceImageData);
+      if (success && onSuccess) onSuccess();
     } finally {
       setIsLoading(false);
     }
@@ -70,10 +45,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
 
   if (showFaceScanner) {
     return (
-      <FaceCapture
+      <FaceScanner
         onCapture={handleFaceCapture}
         onCancel={() => setShowFaceScanner(false)}
-        capturedImage={faceImagePreview}
       />
     );
   }
@@ -139,9 +113,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
         </div>
 
         <div className="space-y-2">
-          <Label>Face Authentication (Required)</Label>
+          <Label>Face Authentication</Label>
           <div className="flex flex-col space-y-2">
-            {faceImagePreview ? (
+            {faceImageData ? (
               <div className="border rounded-md p-3 flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Face scan captured</span>
                 <Button 
@@ -157,10 +131,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
                 type="button"
                 variant="outline" 
                 onClick={() => setShowFaceScanner(true)}
-                className="flex items-center justify-center"
+                className="flex items-center"
               >
                 <Camera className="mr-2 h-4 w-4" />
-                Capture Face
+                Scan Face
               </Button>
             )}
             <p className="text-xs text-muted-foreground">
@@ -169,11 +143,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onToggleForm, onSuccess }) => {
           </div>
         </div>
         
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isLoading || !faceImagePreview}
-        >
+        <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? 'Creating account...' : 'Sign up'}
         </Button>
       </form>
