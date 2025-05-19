@@ -29,9 +29,23 @@ const FaceScanner: React.FC<FaceScannerProps> = ({ onCapture, onCancel }) => {
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          
+          // This ensures the video plays once loaded
+          videoRef.current.onloadedmetadata = () => {
+            if (videoRef.current) {
+              videoRef.current.play()
+                .then(() => {
+                  console.log('Camera stream started successfully');
+                  setIsScanning(true);
+                })
+                .catch(err => {
+                  console.error('Error playing video:', err);
+                  setErrorMessage('Error starting video stream');
+                });
+            }
+          };
         }
         
-        setIsScanning(true);
         setErrorMessage(null);
       } catch (err) {
         console.error("Error accessing camera:", err);
@@ -103,6 +117,7 @@ const FaceScanner: React.FC<FaceScannerProps> = ({ onCapture, onCancel }) => {
             playsInline 
             muted
             className="w-full h-full object-cover"
+            style={{ transform: 'scaleX(-1)' }} // Mirror the video for more natural selfie experience
           />
         ) : isCaptured ? (
           <div className="flex items-center justify-center h-full w-full bg-primary/10">
