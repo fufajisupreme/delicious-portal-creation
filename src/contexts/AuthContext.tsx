@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { verifyFace, registerFace } from '@/services/faceAuthService';
@@ -13,6 +12,7 @@ export interface User {
   name: string;
   role: UserRole;
   hasFaceId?: boolean;
+  token?: string;
 }
 
 // Define auth context type
@@ -43,15 +43,10 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 /**
- * Mock user database 
- * @backend-integration
- * In a real application:
- * 1. This would be stored in a secure database (e.g., PostgreSQL with Supabase)
- * 2. Passwords would be hashed using bcrypt or Argon2
- * 3. Face data would be stored as embeddings (vectors), not raw images
- * 4. Proper authentication tokens would be used (JWT, session tokens)
+ * Mock user database for non-face auth users
+ * This will be used as a fallback when face auth is not used
  */
-const MOCK_USERS: Record<string, User & { password: string; faceId?: string }> = {};
+const MOCK_USERS: Record<string, User & { password: string; }> = {};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -73,18 +68,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /**
    * Login with email/password
-   * @backend-implementation
-   * In a real backend:
-   * 1. Validate credentials against database
-   * 2. Hash password comparison
-   * 3. Generate and return auth tokens
-   * 4. Log authentication attempts for security monitoring
    */
   const login = async (
     email: string, 
     password: string, 
     faceImageData: string | null = null
   ): Promise<boolean> => {
+    // If face data provided, try face login
+    if (faceImageData) {
+      return loginWithFace(email, faceImageData);
+    }
+
+    // Otherwise, fall back to mock login
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -98,30 +93,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    // If face data provided, verify it as an additional check
-    if (faceImageData && userEntry.faceId) {
-      toast.info("Verifying face ID...");
-      try {
-        const verifyResult = await verifyFace(userEntry.id, faceImageData);
-        if (!verifyResult.success) {
-          toast.error("Face verification failed");
-          return false;
-        }
-        toast.success("Face verified successfully");
-      } catch (error) {
-        console.error("Face verification error:", error);
-        toast.error("Face verification failed");
-        return false;
-      }
-    }
-
     // Create user object without password
     const loggedInUser = {
       id: userEntry.id,
       email: userEntry.email,
       name: userEntry.name,
       role: userEntry.role,
-      hasFaceId: !!userEntry.faceId
+      hasFaceId: false
     };
 
     // Store user in state and localStorage
@@ -132,73 +110,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   /**
-   * Login with face only
-   * @backend-implementation
-   * In a real backend:
-   * 1. Look up user by email
-   * 2. Compare face embeddings with stored face data
-   * 3. Generate auth tokens on successful match
-   * 4. Implement anti-spoofing measures
+   * Login with face only - uses the face API
    */
   const loginWithFace = async (email: string, faceImageData: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Find user by email
-    const userEntry = Object.values(MOCK_USERS).find(
-      u => u.email.toLowerCase() === email.toLowerCase()
-    );
-    
-    if (!userEntry) {
-      toast.error("User not found");
-      return false;
-    }
-    
-    if (!userEntry.faceId) {
-      toast.error("Face ID not set up for this account");
-      return false;
-    }
-    
-    // Verify face
     toast.info("Verifying your face...");
+    
     try {
-      const verifyResult = await verifyFace(userEntry.id, faceImageData);
+      const verifyResult = await verifyFace(email, faceImageData);
+      
       if (!verifyResult.success) {
-        toast.error("Face verification failed");
+        toast.error(verifyResult.message || "Face verification failed");
         return false;
       }
+      
+      // For demo purposes, create a mock user if we don't have user details
+      // In a real implementation, the API would return user details
+      const mockUserId = `user-${Date.now()}`;
+      const loggedInUser = {
+        id: mockUserId,
+        email: email,
+        name: email.split('@')[0],  // Use part of the email as name
+        role: 'customer' as UserRole,
+        hasFaceId: true,
+        token: verifyResult.token
+      };
+      
+      // Store user in state and localStorage
+      setUser(loggedInUser);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
+      toast.success(`Welcome back!`);
+      return true;
     } catch (error) {
-      console.error("Face verification error:", error);
+      console.error("Face login error:", error);
       toast.error("Face verification failed");
       return false;
     }
-    
-    // Create user object without password
-    const loggedInUser = {
-      id: userEntry.id,
-      email: userEntry.email,
-      name: userEntry.name,
-      role: userEntry.role,
-      hasFaceId: true
-    };
-    
-    // Store user in state and localStorage
-    setUser(loggedInUser);
-    localStorage.setItem('user', JSON.stringify(loggedInUser));
-    toast.success(`Welcome back, ${loggedInUser.name}!`);
-    return true;
   };
 
   /**
    * Signup with email/password and optional face data
-   * @backend-implementation
-   * In a real backend:
-   * 1. Validate input data
-   * 2. Check for existing users with same email
-   * 3. Hash password before storing
-   * 4. Process and store face embedding if provided
-   * 5. Create user record in database
-   * 6. Generate auth tokens for immediate login
    */
   const signup = async (
     name: string, 
@@ -207,10 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role: UserRole,
     faceImageData: string | null = null
   ): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Check if email is already registered
+    // Check if email is already registered in mock database
     const userExists = Object.values(MOCK_USERS).some(
       u => u.email.toLowerCase() === email.toLowerCase()
     );
@@ -220,52 +167,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    // Create new user
-    const newUserId = `user-${Date.now()}`;
-    const newUser = {
-      id: newUserId,
-      email,
-      name,
-      role,
-      password,
-      faceId: faceImageData ? `face-${Date.now()}` : undefined
-    };
-    
-    // Register face if provided
+    // If face data provided, register with the API
     if (faceImageData) {
       toast.info("Registering your face...");
       try {
-        const registerResult = await registerFace(newUserId, faceImageData);
+        const registerResult = await registerFace(email, password, faceImageData);
+        
         if (!registerResult.success) {
-          toast.error("Face registration failed");
-          // Continue with signup anyway, just without face authentication
-          newUser.faceId = undefined;
+          toast.error(registerResult.message || "Face registration failed");
+          return false;
         }
+        
+        // Create user object for frontend
+        const newUserId = `user-${Date.now()}`;
+        const newUser = {
+          id: newUserId,
+          email,
+          name,
+          role,
+          hasFaceId: true,
+          token: registerResult.token
+        };
+        
+        // Store user in state and localStorage
+        setUser(newUser);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        toast.success(`Welcome, ${name}!`);
+        return true;
       } catch (error) {
         console.error("Face registration error:", error);
         toast.error("Face registration failed");
-        // Continue with signup anyway, just without face authentication
-        newUser.faceId = undefined;
+        return false;
       }
+    } else {
+      // No face data, use mock registration
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Create new user in mock database
+      const newUserId = `user-${Date.now()}`;
+      const newUser = {
+        id: newUserId,
+        email,
+        name,
+        role,
+        password,
+        hasFaceId: false
+      };
+      
+      // Add user to mock database
+      MOCK_USERS[newUserId] = newUser;
+
+      // Create user object without password for frontend
+      const loggedInUser = {
+        id: newUserId,
+        email,
+        name,
+        role,
+        hasFaceId: false
+      };
+
+      // Store user in state and localStorage
+      setUser(loggedInUser);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
+      toast.success(`Welcome, ${name}!`);
+      return true;
     }
-
-    // Add user to mock database
-    MOCK_USERS[newUserId] = newUser;
-
-    // Create user object without password for frontend
-    const loggedInUser = {
-      id: newUserId,
-      email,
-      name,
-      role,
-      hasFaceId: !!newUser.faceId
-    };
-
-    // Store user in state and localStorage
-    setUser(loggedInUser);
-    localStorage.setItem('user', JSON.stringify(loggedInUser));
-    toast.success(`Welcome, ${name}!`);
-    return true;
   };
 
   // Logout function
