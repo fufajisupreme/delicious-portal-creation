@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Clock, MapPin, Search, SlidersHorizontal } from 'lucide-react';
@@ -30,6 +31,8 @@ import {
 } from '@/components/ui/pagination';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CitySelector from '@/components/CitySelector';
+import { useCity } from '@/contexts/CityContext';
 import { cn } from '@/lib/utils';
 
 const baseRestaurants = [
@@ -44,6 +47,7 @@ const baseRestaurants = [
     distance: '0.8 mi',
     priceRange: '$$',
     description: 'Fresh, organic ingredients crafted into nutritious and delicious meals.',
+    city: 'New York',
   },
   {
     id: 2,
@@ -56,6 +60,7 @@ const baseRestaurants = [
     distance: '1.2 mi',
     priceRange: '$$$',
     description: 'Authentic Italian cuisine with homemade pasta and wood-fired pizzas.',
+    city: 'Chicago',
   },
   {
     id: 3,
@@ -68,6 +73,7 @@ const baseRestaurants = [
     distance: '1.5 mi',
     priceRange: '$$$',
     description: 'Premium Japanese sushi and sashimi made with the freshest seafood.',
+    city: 'Los Angeles',
   },
   {
     id: 4,
@@ -80,6 +86,7 @@ const baseRestaurants = [
     distance: '0.5 mi',
     priceRange: '$$',
     description: 'Juicy, handcrafted burgers made with 100% beef.',
+    city: 'New York',
   },
   {
     id: 5,
@@ -92,6 +99,7 @@ const baseRestaurants = [
     distance: '1.8 mi',
     priceRange: '$$',
     description: 'Authentic Indian cuisine with bold flavors and aromatic spices from all regions of India. Specializing in both North and South Indian delicacies.',
+    city: 'San Francisco',
   },
   {
     id: 6,
@@ -104,6 +112,7 @@ const baseRestaurants = [
     distance: '1.3 mi',
     priceRange: '$$',
     description: 'Fresh Mediterranean cuisine featuring classic dishes from Greece and Lebanon.',
+    city: 'Miami',
   },
   {
     id: 7,
@@ -116,6 +125,7 @@ const baseRestaurants = [
     distance: '0.9 mi',
     priceRange: '$',
     description: 'Authentic Mexican street food with homemade salsas and fresh ingredients.',
+    city: 'Los Angeles',
   },
   {
     id: 8,
@@ -128,6 +138,7 @@ const baseRestaurants = [
     distance: '1.1 mi',
     priceRange: '$$',
     description: 'Asian fusion restaurant specializing in various noodle dishes.',
+    city: 'Seattle',
   },
   {
     id: 9,
@@ -140,6 +151,7 @@ const baseRestaurants = [
     distance: '1.4 mi',
     priceRange: '$$',
     description: 'Authentic wood-fired pizzas made with traditional Italian recipes and fresh ingredients.',
+    city: 'Chicago',
   },
   {
     id: 10,
@@ -152,6 +164,7 @@ const baseRestaurants = [
     distance: '1.7 mi',
     priceRange: '$$$',
     description: 'Creative plant-based dishes that prove vegan food is anything but boring.',
+    city: 'San Francisco',
   },
   {
     id: 11,
@@ -164,6 +177,7 @@ const baseRestaurants = [
     distance: '2.1 mi',
     priceRange: '$$$$',
     description: 'The freshest catches of the day prepared with expertise and creativity.',
+    city: 'Boston',
   },
   {
     id: 12,
@@ -176,6 +190,7 @@ const baseRestaurants = [
     distance: '1.6 mi',
     priceRange: '$$',
     description: 'Traditional Chinese cuisine from various regions, with a focus on authenticity.',
+    city: 'Seattle',
   },
   {
     id: 13,
@@ -188,6 +203,7 @@ const baseRestaurants = [
     distance: '1.2 mi',
     priceRange: '$$',
     description: 'Bold and aromatic Thai dishes with the perfect balance of sweet, sour, and spicy flavors.',
+    city: 'Austin',
   },
   {
     id: 14,
@@ -200,6 +216,7 @@ const baseRestaurants = [
     distance: '2.4 mi',
     priceRange: '$$$$',
     description: 'Premium aged steaks and fine wines in an elegant atmosphere.',
+    city: 'Denver',
   },
   {
     id: 15,
@@ -212,13 +229,19 @@ const baseRestaurants = [
     distance: '1.9 mi',
     priceRange: '$$$',
     description: 'Authentic Korean BBQ and traditional dishes full of umami and fermented flavors.',
+    city: 'Austin',
   },
 ];
 
 const getAllRestaurants = () => {
   try {
     const ownerRestaurants = JSON.parse(localStorage.getItem('restaurants') || '[]');
-    return [...baseRestaurants, ...ownerRestaurants];
+    // Add a default city to owner restaurants if they don't have one
+    const ownerRestaurantsWithCity = ownerRestaurants.map((restaurant: any) => ({
+      ...restaurant,
+      city: restaurant.city || 'All Cities'
+    }));
+    return [...baseRestaurants, ...ownerRestaurantsWithCity];
   } catch (error) {
     console.error('Error loading owner restaurants:', error);
     return baseRestaurants;
@@ -237,6 +260,7 @@ const Restaurants = () => {
   const [priceFilter, setPriceFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState([0]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { selectedCity } = useCity();
   
   const [currentPage, setCurrentPage] = useState(1);
   const restaurantsPerPage = 6;
@@ -246,32 +270,37 @@ const Restaurants = () => {
   useEffect(() => {
     let result = restaurants;
     
+    // Apply city filter
+    if (selectedCity !== 'All Cities') {
+      result = result.filter((restaurant: any) => restaurant.city === selectedCity);
+    }
+    
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(restaurant => 
+      result = result.filter((restaurant: any) => 
         restaurant.name.toLowerCase().includes(term) || 
         restaurant.cuisine.toLowerCase().includes(term) ||
-        restaurant.tags.some(tag => tag.toLowerCase().includes(term))
+        restaurant.tags.some((tag: string) => tag.toLowerCase().includes(term))
       );
     }
     
     if (cuisineFilter !== 'all') {
-      result = result.filter(restaurant => 
+      result = result.filter((restaurant: any) => 
         restaurant.cuisine.toLowerCase() === cuisineFilter
       );
     }
     
     if (priceFilter !== 'all') {
-      result = result.filter(restaurant => restaurant.priceRange === priceFilter);
+      result = result.filter((restaurant: any) => restaurant.priceRange === priceFilter);
     }
     
     if (ratingFilter[0] > 0) {
-      result = result.filter(restaurant => restaurant.rating >= ratingFilter[0]);
+      result = result.filter((restaurant: any) => restaurant.rating >= ratingFilter[0]);
     }
     
     setFilteredRestaurants(result);
     setCurrentPage(1);
-  }, [searchTerm, cuisineFilter, priceFilter, ratingFilter, restaurants]);
+  }, [searchTerm, cuisineFilter, priceFilter, ratingFilter, restaurants, selectedCity]);
   
   useEffect(() => {
     setRestaurants(getAllRestaurants());
@@ -297,7 +326,10 @@ const Restaurants = () => {
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-6">
           <div className="space-y-6">
-            <h1 className="text-3xl font-bold">Restaurants</h1>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <h1 className="text-3xl font-bold">Restaurants</h1>
+              <CitySelector />
+            </div>
             
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">

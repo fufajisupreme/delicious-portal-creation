@@ -4,6 +4,8 @@ import { Star, Clock, MapPin, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { useCity } from '@/contexts/CityContext';
+import CitySelector from './CitySelector';
 
 const restaurants = [
   {
@@ -16,6 +18,7 @@ const restaurants = [
     distance: '0.8 mi',
     featured: true,
     delay: '0',
+    city: 'New York',
   },
   {
     id: 2,
@@ -27,6 +30,7 @@ const restaurants = [
     distance: '1.2 mi',
     featured: false,
     delay: '100',
+    city: 'Chicago',
   },
   {
     id: 3,
@@ -38,6 +42,7 @@ const restaurants = [
     distance: '1.5 mi',
     featured: true,
     delay: '200',
+    city: 'Los Angeles',
   },
   {
     id: 4,
@@ -49,6 +54,7 @@ const restaurants = [
     distance: '0.5 mi',
     featured: false,
     delay: '300',
+    city: 'New York',
   },
   {
     id: 5,
@@ -60,6 +66,7 @@ const restaurants = [
     distance: '1.8 mi',
     featured: true,
     delay: '400',
+    city: 'San Francisco',
   },
   {
     id: 6,
@@ -71,6 +78,7 @@ const restaurants = [
     distance: '1.3 mi',
     featured: false,
     delay: '500',
+    city: 'Miami',
   },
   {
     id: 7,
@@ -82,6 +90,7 @@ const restaurants = [
     distance: '0.9 mi',
     featured: true,
     delay: '600',
+    city: 'Los Angeles',
   },
   {
     id: 8,
@@ -93,6 +102,7 @@ const restaurants = [
     distance: '1.1 mi',
     featured: false,
     delay: '700',
+    city: 'Seattle',
   },
 ];
 
@@ -164,6 +174,13 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
 };
 
 const FeaturedRestaurants = () => {
+  const { selectedCity } = useCity();
+  
+  // Filter restaurants based on selected city
+  const filteredRestaurants = selectedCity === 'All Cities' 
+    ? restaurants.slice(0, 6)
+    : restaurants.filter(restaurant => restaurant.city === selectedCity).slice(0, 6);
+  
   return (
     <section id="restaurants" className="section-padding">
       <div className="container mx-auto px-6">
@@ -182,22 +199,32 @@ const FeaturedRestaurants = () => {
             </p>
           </div>
           
-          <Link to="/restaurants">
-            <Button 
-              variant="ghost" 
-              className="self-start group animate-fade-left"
-            >
-              <span>View All Restaurants</span>
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <CitySelector variant="minimal" />
+            <Link to="/restaurants">
+              <Button 
+                variant="ghost" 
+                className="self-start group animate-fade-left"
+              >
+                <span>View All Restaurants</span>
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {restaurants.slice(0, 6).map((restaurant, index) => (
-            <RestaurantCard key={index} restaurant={restaurant} />
-          ))}
-        </div>
+        {filteredRestaurants.length === 0 ? (
+          <div className="text-center py-12">
+            <h3 className="text-xl font-semibold mb-2">No restaurants found in {selectedCity}</h3>
+            <p className="text-muted-foreground">Try selecting a different city</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRestaurants.map((restaurant, index) => (
+              <RestaurantCard key={index} restaurant={restaurant} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
