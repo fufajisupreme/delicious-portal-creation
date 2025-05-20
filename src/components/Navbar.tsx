@@ -1,14 +1,17 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { useAuth } from '@/contexts/AuthContext';
 import CitySelector from './CitySelector';
+import UserMenu from './auth/UserMenu';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const { isLoggedIn, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const isLoggedIn = !!user;
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -43,9 +46,12 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             <CitySelector variant="compact" />
             {isLoggedIn ? (
-              <Button variant="outline" size="sm" onClick={logout}>
-                Logout
-              </Button>
+              <>
+                <UserMenu />
+                <Button variant="outline" size="sm" onClick={logout}>
+                  Logout
+                </Button>
+              </>
             ) : (
               <>
                 <Link to="/dashboard">
@@ -88,9 +94,12 @@ const Navbar = () => {
                 </a>
                 <CitySelector variant="compact" />
                 {isLoggedIn ? (
-                  <Button variant="outline" size="sm" onClick={logout}>
-                    Logout
-                  </Button>
+                  <>
+                    <UserMenu />
+                    <Button variant="outline" size="sm" onClick={logout}>
+                      Logout
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Link to="/dashboard">
