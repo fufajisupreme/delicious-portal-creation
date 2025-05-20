@@ -4,7 +4,9 @@ import { Star, Clock, MapPin, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { useCity } from '@/contexts/CityContext';
 
+// Add city field to restaurant data
 const restaurants = [
   {
     id: 1,
@@ -16,6 +18,7 @@ const restaurants = [
     distance: '0.8 mi',
     featured: true,
     delay: '0',
+    city: 'New York',
   },
   {
     id: 2,
@@ -27,6 +30,7 @@ const restaurants = [
     distance: '1.2 mi',
     featured: false,
     delay: '100',
+    city: 'Chicago',
   },
   {
     id: 3,
@@ -38,6 +42,7 @@ const restaurants = [
     distance: '1.5 mi',
     featured: true,
     delay: '200',
+    city: 'Los Angeles',
   },
   {
     id: 4,
@@ -49,6 +54,7 @@ const restaurants = [
     distance: '0.5 mi',
     featured: false,
     delay: '300',
+    city: 'New York',
   },
   {
     id: 5,
@@ -60,6 +66,7 @@ const restaurants = [
     distance: '1.8 mi',
     featured: true,
     delay: '400',
+    city: 'Houston',
   },
   {
     id: 6,
@@ -71,6 +78,7 @@ const restaurants = [
     distance: '1.3 mi',
     featured: false,
     delay: '500',
+    city: 'San Diego',
   },
   {
     id: 7,
@@ -82,6 +90,7 @@ const restaurants = [
     distance: '0.9 mi',
     featured: true,
     delay: '600',
+    city: 'Phoenix',
   },
   {
     id: 8,
@@ -93,6 +102,7 @@ const restaurants = [
     distance: '1.1 mi',
     featured: false,
     delay: '700',
+    city: 'Austin',
   },
 ];
 
@@ -164,6 +174,14 @@ const RestaurantCard = ({ restaurant }: { restaurant: typeof restaurants[0] }) =
 };
 
 const FeaturedRestaurants = () => {
+  const { selectedCity } = useCity();
+  
+  // Filter restaurants by selected city
+  const filteredRestaurants = restaurants.filter(restaurant => restaurant.city === selectedCity);
+  
+  // Show message if no restaurants in selected city
+  const noRestaurants = filteredRestaurants.length === 0;
+  
   return (
     <section id="restaurants" className="section-padding">
       <div className="container mx-auto px-6">
@@ -171,14 +189,14 @@ const FeaturedRestaurants = () => {
           <div className="space-y-4 md:space-y-6">
             <div className="inline-block animate-fade-down">
               <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-food-red/10 text-food-red">
-                Top Picks
+                Top Picks in {selectedCity}
               </span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold animate-fade-down delay-100">
               Featured Restaurants
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl animate-fade-down delay-200">
-              Discover our handpicked selection of the most popular restaurants in your area
+              Discover our handpicked selection of the most popular restaurants in {selectedCity}
             </p>
           </div>
           
@@ -193,11 +211,19 @@ const FeaturedRestaurants = () => {
           </Link>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {restaurants.slice(0, 6).map((restaurant, index) => (
-            <RestaurantCard key={index} restaurant={restaurant} />
-          ))}
-        </div>
+        {noRestaurants ? (
+          <div className="text-center py-16 animate-fade-up">
+            <h3 className="text-2xl font-semibold mb-4">No restaurants found in {selectedCity}</h3>
+            <p className="text-muted-foreground mb-6">We're working on expanding to your area soon!</p>
+            <p className="text-sm text-muted-foreground">Try selecting a different city from the dropdown in the navigation bar</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRestaurants.slice(0, 6).map((restaurant, index) => (
+              <RestaurantCard key={index} restaurant={restaurant} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

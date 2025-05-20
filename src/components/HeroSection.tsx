@@ -1,10 +1,14 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, MapPin, Clock, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import CitySelector from '@/components/CitySelector';
+import { useCity } from '@/contexts/CityContext';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { selectedCity } = useCity();
 
   const handleOrderNow = () => {
     // Scroll to the restaurants section on the home page
@@ -47,13 +51,17 @@ const HeroSection = () => {
               Order from your favorite restaurants and get your food delivered to your doorstep in minutes.
             </p>
             
+            <div className="mx-auto lg:mx-0 max-w-sm animate-fade-down delay-250">
+              <CitySelector variant="default" className="w-full justify-center lg:justify-start" />
+            </div>
+            
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4 animate-fade-down delay-300">
               <Button 
                 size="lg" 
                 className="rounded-full shadow-md shadow-primary/20 group"
                 onClick={handleOrderNow}
               >
-                Order Now
+                Order Now in {selectedCity}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
               <Button 
